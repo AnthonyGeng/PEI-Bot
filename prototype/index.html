@@ -156,7 +156,7 @@ table{border-collapse:collapse;width:100%;font-size:13px}
 th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
 tr:last-child td{border-bottom:0}
 th{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500}
-td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 .composer{padding-block:10px 18px;padding-left:max(28px,env(safe-area-inset-left,0px));padding-right:max(28px,env(safe-area-inset-right,0px))}
 .composer .in{max-width:980px;margin:0 auto;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:10px;display:flex;flex-direction:column;gap:8px;box-shadow:var(--shadow)}
 .composer .in:focus-within{border-color:var(--accent)}
@@ -202,6 +202,11 @@ button.card:hover{transform:translateY(-3px);border-color:var(--c)}
 .tg::after{content:"";position:absolute;top:2.5px;left:2.5px;width:16px;height:16px;border-radius:50%;background:var(--panel);transition:transform .15s}
 .tg:checked{background:var(--accent)} .tg:checked::after{transform:translateX(15px)}
 .tg:disabled{opacity:.6;cursor:default}
+.term{font-family:var(--mono);font-size:12px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:12px 14px;line-height:1.9;overflow-x:auto;white-space:nowrap;margin-top:10px}
+.term .ok{color:var(--good)} .term .dim{color:var(--muted)}
+.kernel{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:center;background:linear-gradient(120deg,color-mix(in srgb,var(--s1) 16%,var(--panel)),var(--panel) 62%)}
+.kernel .big{font-family:var(--display);font-weight:800;font-size:32px;letter-spacing:-.03em;line-height:1.1;margin:6px 0}
+.ch{font-family:var(--mono);font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;border:1px solid currentColor;border-radius:4px;padding:0 4px;color:var(--signal);margin-left:auto}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(22px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);border-radius:10px;padding:9px 16px;font-size:13px;z-index:20;max-width:calc(100% - 32px);box-shadow:var(--shadow)}
 .rise{animation:rise .5s cubic-bezier(.2,.7,.2,1) both}
 @keyframes rise{from{transform:translateY(10px)}}
@@ -213,7 +218,7 @@ button.card:hover{transform:translateY(-3px);border-color:var(--c)}
   .nav{flex-direction:row}.nav button{white-space:nowrap;width:auto}
   .foot{margin:0 0 0 auto;padding:0}
   .head,.body,.composer{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-  .hero,.cols,.two{grid-template-columns:minmax(0,1fr)} .kv{grid-template-columns:minmax(0,1fr)} .kv dt{margin-top:4px}
+  .hero,.cols,.two,.kernel{grid-template-columns:minmax(0,1fr)} .kv{grid-template-columns:minmax(0,1fr)} .kv dt{margin-top:4px}
   .dial{max-width:340px}
 }
 </style>
@@ -257,7 +262,18 @@ const S={lang:'zh',view:'desk',thread:'t1',bot:'atlas',tab:'overview',draft:'',t
   {on:true,scope:['Decision 1 判定含敏感数据的请求','Requests Decision 1 flags as sensitive'],model:'flash',why:['仅限已正式发布的模型','Generally available models only']},
   {on:false,scope:['单 Bot 月花费超过预算 80%','Any bot above 80% of monthly budget'],model:'lite',why:['超支前自动降档','Downgrade before overspend']}],
  audit:[['09:07','Inbox','gmail.draft × 3','L1','ok'],['09:05','Atlas','a2a → Budget Check · query_budget_variance','L0','ok'],['09:04','Merch Analyst','bi.query','L0','ok'],['09:02','Atlas','decision · tier=pro conf=0.76','L0','ok'],['06:31','PO Tracker','ui.session · vendor portal · 14 steps','L1','ok'],['06:31','PO Tracker','vault.inject · portal credential','L1','ok'],['昨天 17:40','Atlas','gmail.send → external','L2','denied']],
- form:null
+ form:null,mod:null,push:null,
+ kernel:{v:'1.0.3',sdk:'1.4',days:42},
+ modules:[
+  {id:'desk',view:'desk',n:['值班台','Shift Desk'],nav:['值班台','Desk'],by:['平台团队','Platform team'],v:'1.8.0',ch:'stable',on:true,pages:1,apis:3,tools:[],kb:41,cold:6},
+  {id:'threads',view:'threads',n:['线程','Threads'],nav:['线程','Threads'],by:['平台团队','Platform team'],v:'2.3.1',ch:'stable',on:true,pages:1,apis:9,tools:['thread.post','bot.delegate'],grants:['Bot delegation'],kb:58,cold:8},
+  {id:'bots',view:'bots',n:['Bot 管理','Bot Manager'],nav:['我的 Bot','My bots'],by:['平台团队','Platform team'],v:'2.1.0',ch:'stable',on:true,pages:3,apis:12,tools:[],kb:64,cold:7},
+  {id:'directory',view:'directory',n:['公司目录','Directory'],nav:['公司目录','Directory'],by:['平台团队','Platform team'],v:'1.4.2',ch:'stable',on:true,pages:1,apis:4,tools:['a2a.call'],kb:22,cold:5},
+  {id:'admin',view:'admin',n:['管理后台','Admin Console'],nav:['管理后台','Admin'],by:['平台团队','Platform team'],v:'1.6.0',ch:'stable',on:true,pages:1,apis:14,tools:[],kb:47,cold:9},
+  {id:'workspace',n:['Google Workspace 连接器','Google Workspace connector'],by:['平台团队','Platform team'],v:'1.2.0',ch:'stable',on:true,pages:0,apis:2,tools:['gmail.read','gmail.draft','gmail.send','calendar.read','drive.search','sheets.write'],grants:['Gmail','Calendar','Drive','Sheets'],kb:0,cold:11},
+  {id:'merch',page:'merch',n:['销售洞察','Merch Insights'],nav:['售罄看板','Sell-through'],by:['商品部开发组','Merchandising dev'],v:'0.9.4',ch:'stable',on:true,pages:1,apis:3,tools:['bi.query','sellthrough.report'],grants:['BI warehouse'],kb:36,cold:9},
+  {id:'vendor',n:['供应商门户','Vendor Portal'],by:['供应链 IT','Supply Chain IT'],v:'0.4.0',ch:'beta',on:true,pages:0,apis:2,tools:['portal.list_late_pos','portal.expedite'],grants:['Vendor portal'],kb:0,cold:14}
+ ]
 };
 try{const l=localStorage.getItem('peibot-lang');if(l)S.lang=l;}catch(e){}
 const L=(zh,en)=>S.lang==='zh'?zh:en, P=a=>a[S.lang==='zh'?0:1];
@@ -388,23 +404,49 @@ function vNew(){const f=S.form;const chip=(k,v,t)=>`<button type="button" class=
  <div class="field"><span class="lb">${L('模型','Model')}</span><div class="chips">${chip('mode','auto',L('让 Decision 1 自动选','Let Decision 1 choose'))}${chip('mode','pinned',L('固定一个模型','Pin one model'))}</div>
  ${f.mode==='auto'?`<div class="chips">${chip('pref','quality',L('质量优先','Quality first'))}${chip('pref','balanced',L('均衡','Balanced'))}${chip('pref','cost',L('成本优先','Cost first'))}</div><small>${L('每次任务前由 Gemini Decision 1 判断难度并选择模型档位,消息下方可以看到它的打分。','Before each task, Gemini Decision 1 judges the difficulty and picks a tier. Its scores show under each message.')}</small>`:`<div class="chips">${Object.keys(MODELS).map(k=>chip('pin',k,MODELS[k].n)).join('')}</div>`}
  <small>${L('管理员的强制策略优先于这里的选择。','Admin forced rules override this choice.')}</small></div>
- <div class="field"><span class="lb">${L('可以使用的工具','Tools it may use')}</span><div class="chips">${['Gmail','Calendar','Drive','Sheets','BI warehouse','Bot delegation'].map(t=>`<button type="button" class="chip" aria-pressed="${f.tools.includes(t)}" data-act="tool" data-v="${t}">${t}</button>`).join('')}</div><small>${L('只能授予你自己已有的权限。','You can only grant access you already have.')}</small></div>
+ <div class="field"><span class="lb">${L('可以使用的工具','Tools it may use')}</span><div class="chips">${toolChoices().map(t=>`<button type="button" class="chip" aria-pressed="${f.tools.includes(t)}" data-act="tool" data-v="${t}">${t}</button>`).join('')}</div><small>${L('工具由已启用的模块提供;只能授予你自己已有的权限。','Tools come from enabled modules. You can only grant access you already have.')}</small></div>
  <div class="field"><span class="lb">${L('电脑','Computer')}</span><div class="chips">${chip('cu','no',L('不需要(推荐)','Not needed (recommended)'))}${chip('cu','yes',L('给它一台云电脑','Give it a cloud computer'))}</div><small>${L('只有要操作没有接口的网站或系统时才需要;成本明显更高。','Only for sites or systems without an API. Costs noticeably more.')}</small></div>
  <div class="field"><span class="lb">${L('什么时候工作','When it works')}</span><div class="chips">${chip('sched','none',L('被叫到时','When asked'))}${chip('sched','hourly',L('每小时','Hourly'))}${chip('sched','daily',L('每天早上','Every morning'))}${chip('sched','weekly',L('每周一','Every Monday'))}</div></div>
  <div class="field"><span class="lb">${L('谁可以调用它','Who can call it')}</span><div class="chips">${chip('vis','private',L('仅自己','Only me'))}${chip('vis','dept',L('本部门','My department'))}${chip('vis','company',L('全公司','Company'))}</div>${f.vis!=='private'?`<small>${L('开放后需要声明它的对外能力清单,别人和别人的 Bot 只能触发清单内的功能。','Once shared, you list its exposed capabilities. Others and their bots can only trigger those.')}</small>`:''}</div>
  <div class="row"><button type="submit" class="btn pri">${L('创建 Bot','Create bot')}</button><button type="button" class="btn" data-act="nav" data-id="bots">${L('取消','Cancel')}</button></div></form></div>`}}
 
 /* ---- shell ---- */
-const NAV=[['desk','值班台','Desk'],['threads','线程','Threads'],['bots','我的 Bot','My bots'],['directory','公司目录','Directory'],['approvals','审批','Approvals'],['admin','管理后台','Admin']];
+const HASHES=['desk','threads','bots','directory','approvals','admin','modules'];
+function navItems(){const it=S.modules.filter(m=>m.on&&m.nav).map(m=>({id:m.view||'mod:'+m.id,label:P(m.nav),ch:m.ch}));it.push({sep:L('内核','Kernel')},{id:'approvals',label:L('审批','Approvals')},{id:'modules',label:L('模块','Modules')});return it}
+const toolChoices=()=>[...new Set(S.modules.filter(m=>m.on).flatMap(m=>m.grants||[]))];
+function vdec(v){const a=v.split('.').map(Number);if(a[2]>0)a[2]--;else if(a[1]>0){a[1]--;a[2]=0}else return null;return a.join('.')}
+function pushModule(){
+ if(S.push&&!S.push.done)return;
+ const ex=S.modules.find(m=>m.id==='returns');const ver=ex?ex.v.replace(/\d+$/,n=>+n+1):'0.1.0';
+ S.push={ver,steps:[],done:false};render();
+ const st=[[L('校验清单、类型与 SDK 1.4 兼容性','Validated manifest, types and SDK 1.4 compatibility'),'0.9 s',700],[L('密钥扫描与体积检查 · 前端 18 KB','Secret scan and size check · 18 KB frontend'),'0.3 s',1300],[L('生成不可变版本 returns-desk@','Created immutable version returns-desk@')+ver,'0.6 s',2000],[L('前端发布到 CDN · 后端在 V8 隔离运行时启动 · 2 个工具已登记','Frontend on CDN · backend started in a V8 isolate · 2 tools registered'),'1.8 s',3000]];
+ st.forEach(x=>setTimeout(()=>{S.push.steps.push(x);render()},x[2]));
+ setTimeout(()=>{S.push.done=true;if(ex){ex.v=ver;ex.ch='dev'}else S.modules.push({id:'returns',n:['退货台','Returns Desk'],nav:['退货台','Returns'],by:['供应链 IT','Supply Chain IT'],v:ver,ch:'dev',on:true,pages:1,apis:2,tools:['returns.lookup','returns.approve_refund'],grants:['Returns'],kb:18,cold:7});S.audit.unshift([now(),'—','module.push · returns-desk@'+ver+' → dev','L1','ok']);toast(L('已在开发通道生效:导航里多了"退货台",Bot 多了 2 个工具','Live on the dev channel: "Returns" is in the nav and bots have 2 new tools'))},3500);
+}
+function vModules(){const k=S.kernel,tot=S.modules.filter(m=>m.on).reduce((n,m)=>n+m.tools.length,0);
+ const chp=c=>`<span class="pill ${c==='stable'?'good':c==='beta'?'acc':'warn'}">${{stable:L('正式','Stable'),beta:L('试用','Beta'),dev:L('开发 · 仅你可见','Dev · only you')}[c]}</span>`;
+ return {title:L('模块','Modules'),sub:L(`${S.modules.length} 个模块 · ${tot} 个 Bot 工具 · 全部动态加载`,`${S.modules.length} modules · ${tot} bot tools · all loaded dynamically`),right:`<button class="btn pri" data-act="push">${L('模拟一次 pei push','Simulate pei push')}</button>`,
+ body:`<div class="wrap rise"><div class="panel kernel"><div><div class="eyebrow">${L('底层 · 只部署这一层','Base layer · the only thing deployed')}</div><div class="big">PEI Bot ${L('内核','Kernel')}</div><div class="note mono">v${k.v} · SDK ${k.sdk} · ${L(`上次部署 ${k.days} 天前`,`last deployed ${k.days} days ago`)}</div></div><div><div class="row">${[['身份与权限','Identity & access'],['数据服务','Data service'],['事件与调度','Events & scheduling'],['模型网关 · Decision 1','Model gateway · Decision 1'],['工具网关','Tool gateway'],['审批与审计','Approvals & audit'],['模块仓库与运行时','Registry & runtime']].map(x=>`<span class="pill mute">${P(x)}</span>`).join('')}</div><p class="note" style="margin:10px 0 0">${L('内核之上的一切都是模块,包括左侧导航里平台自己的页面。模块只能经 SDK 使用内核。后端统一为 TypeScript,运行在 V8 隔离运行时。','Everything above the kernel is a module, including the platform\'s own pages in the nav. Modules reach the kernel only through the SDK. Backends are TypeScript in V8 isolates.')}</p></div></div>
+ ${S.push?`<div class="panel"><h3>${L('推送记录(模拟)','Push log (simulated)')}</h3><div class="term"><div>$ pei push returns-desk</div>${S.push.steps.map(x=>`<div><span class="ok">✓</span> ${esc(x[0])} <span class="dim">${x[1]}</span></div>`).join('')}${S.push.done?`<div class="ok">${L('开发通道已生效,共 3.6 秒。内核未重新部署。','Live on dev in 3.6 s. The kernel was not redeployed.')}</div>`:`<div class="dim">${L('处理中…','Working…')}</div>`}</div></div>`:''}
+ <div class="panel"><div class="tbl-wrap"><table><tr><th>${L('模块','Module')}</th><th>${L('通道','Channel')}</th><th>${L('提供','Provides')}</th><th class="n">${L('前端','Frontend')}</th><th class="n">${L('冷启动','Cold start')}</th><th>${L('启用','On')}</th><th></th></tr>${S.modules.map(m=>`<tr><td><b>${esc(P(m.n))}</b><div class="note">${esc(P(m.by))} · <span class="mono">${m.id}@${m.v}</span></div></td><td>${chp(m.ch)}</td><td class="note">${[m.pages?L(`${m.pages} 个页面`,`${m.pages} pages`):'',L(`${m.apis} 个接口`,`${m.apis} APIs`),m.tools.length?L(`${m.tools.length} 个工具`,`${m.tools.length} tools`):''].filter(Boolean).join(' · ')}${m.tools.length?`<div class="mono" style="margin-top:3px">${m.tools.join(' · ')}</div>`:''}</td><td class="n mono">${m.kb?m.kb+' KB':'—'}</td><td class="n mono">${m.cold} ms</td><td><input type="checkbox" class="tg" id="mod-${m.id}" data-act="modtoggle" data-id="${m.id}" ${m.on?'checked':''} aria-label="${esc(P(m.n))}"></td><td><div class="row" style="flex-wrap:nowrap">${m.ch!=='stable'?`<button class="btn sm pri" data-act="promote" data-id="${m.id}">${L('晋升','Promote')}</button>`:''}<button class="btn sm" data-act="rollback" data-id="${m.id}">${L('回滚','Roll back')}</button></div></td></tr>`).join('')}</table></div></div>
+ <p class="note">${L('试一试:关掉"销售洞察",左侧的"售罄看板"和创建 Bot 时的 BI warehouse 工具会一起消失;再打开就回来。晋升和回滚只是切换"当前生效版本",不涉及构建和部署。数字均为示例。','Try it: turn off Merch Insights and both the Sell-through page and the BI warehouse tool in the bot form disappear; turn it on and they return. Promote and roll back only switch the active version. Figures are examples.')}</p></div>`}}
+function vMod(){const m=S.modules.find(x=>x.id===S.mod)||{};const head={title:P(m.nav||m.n),sub:L(`由模块 ${P(m.n)} 提供 · ${P(m.by)} · `,`Provided by module ${P(m.n)} · ${P(m.by)} · `)+`<span class="mono">${m.id}@${m.v}</span>`,right:m.ch!=='stable'?`<span class="pill warn">${m.ch}</span>`:''};
+ const rows=[['品牌 A','Brand A',61.4,'+2.1'],['品牌 B','Brand B',48.9,'-6.2'],['品牌 C','Brand C',55.0,'+0.4']];
+ const what=`<div class="panel"><h3>${L('这个模块带来了什么','What this module adds')}</h3><dl class="kv"><dt>${L('页面','Pages')}</dt><dd>${m.pages}</dd><dt>${L('后端接口','Backend APIs')}</dt><dd>${m.apis} · TypeScript · V8 isolate · ${L('冷启动','cold start')} ${m.cold} ms</dd><dt>${L('Bot 工具','Bot tools')}</dt><dd>${m.tools.map(t=>`<span class="pill mute mono">${t}</span>`).join(' ')}</dd></dl></div>`;
+ return Object.assign(head,{body:`<div class="wrap rise">${m.page==='merch'?`<div class="panel"><h3>${L('上周售罄率(示例数据)','Last week sell-through (example data)')}</h3>${rows.map(r=>`<div class="opt on" style="grid-template-columns:76px minmax(0,1fr) 110px;padding:6px 0;font-size:13.5px"><span>${L(r[0],r[1])}</span><div class="bar" style="height:10px"><i style="width:${r[2]}%"></i></div><span>${r[2].toFixed(1)}% · ${r[3]}</span></div>`).join('')}<div class="row" style="margin-top:12px"><button class="btn" data-act="start-thread" data-id="merch">${L('让 Merch Analyst 解读','Ask Merch Analyst')}</button></div></div>`:`<div class="panel"><h3>${L('模块页面(示意)','Module page (illustrative)')}</h3><p class="note" style="font-size:13.5px;margin:0">${L('这个页面在推送后数秒内出现,平台没有重新部署。真实模块在这里渲染自己的界面。','This page appeared seconds after the push, with no platform redeploy. A real module renders its own UI here.')}</p></div>`}${what}</div>`})}
+
+
 function render(){
  const act=document.activeElement, keep=act&&act.id, sel=keep&&act.selectionStart;
- const v={desk:vDesk,threads:vThreads,bots:vBots,bot:vBot,directory:vDir,approvals:vAppr,admin:vAdmin,create:vNew}[S.view]();
- const navOn=S.view==='bot'||S.view==='create'?'bots':S.view;
+ const own=S.modules.find(m=>m.view===S.view||(S.view==='mod'&&m.id===S.mod)||(m.view==='bots'&&(S.view==='bot'||S.view==='create')));
+ if((own&&!own.on)||(S.view==='mod'&&!own))S.view='modules';
+ const v={desk:vDesk,threads:vThreads,bots:vBots,bot:vBot,directory:vDir,approvals:vAppr,admin:vAdmin,create:vNew,modules:vModules,mod:vMod}[S.view]();
+ const navOn=S.view==='bot'||S.view==='create'?'bots':S.view==='mod'?'mod:'+S.mod:S.view;
  document.getElementById('app').innerHTML=`<aside class="rail"><div class="brand"><span class="mark"><i></i></span>PEI Bot <span class="tag">${L('原型','Proto')}</span></div>
- <nav class="nav" aria-label="${L('主导航','Main')}">${NAV.map(n=>`<button data-act="nav" data-id="${n[0]}" ${navOn===n[0]?'aria-current="page"':''}>${L(n[1],n[2])}${n[0]==='approvals'&&pending()?`<span class="count">${pending()}</span>`:''}</button>`).join('')}</nav>
+ <nav class="nav" aria-label="${L('主导航','Main')}">${navItems().map(n=>n.sep?`<div class="lbl" style="margin-top:10px">${n.sep}</div>`:`<button data-act="nav" data-id="${n.id}" ${navOn===n.id?'aria-current="page"':''}>${esc(n.label)}${n.ch&&n.ch!=='stable'?`<span class="ch">${n.ch}</span>`:''}${n.id==='approvals'&&pending()?`<span class="count">${pending()}</span>`:''}</button>`).join('')}</nav>
  <div class="group"><div class="lbl">${L('线程','Threads')}</div>${Object.keys(S.threads).map(k=>`<button class="item" data-act="thread" data-id="${k}" aria-current="${S.view==='threads'&&S.thread===k}"><span class="t">${esc(P(S.threads[k].title))}</span></button>`).join('')}</div>
  <div class="group"><div class="lbl">${L('值班 Bot','On shift')}<button class="btn sm" data-act="new-bot" aria-label="${L('创建 Bot','Create bot')}">+</button></div>${S.bots.map(b=>`<button class="item" data-act="open-bot" data-id="${b.id}" aria-current="${S.view==='bot'&&S.bot===b.id}">${sw(b.id)}<span class="t">${esc(b.n)}</span><span class="dot ${b.st==='run'?'run':b.st==='wait'?'wait':''}"></span></button>`).join('')}</div>
- <div class="foot"><button class="btn sm" data-act="lang" aria-label="Language">${S.lang==='zh'?'EN':'中文'}</button><span class="u">${L('示例账号','Demo account')}</span></div></aside>
+ <div class="foot"><button class="btn sm" data-act="lang" aria-label="Language">${S.lang==='zh'?'EN':'中文'}</button><span class="u mono">${L('内核','kernel')} ${S.kernel.v}</span></div></aside>
  <section class="main">${v.bare?'':`<header class="head">${v.lead||''}<div><h1>${esc(v.title)}</h1><div class="sub">${v.sub||''}</div></div><div class="sp">${v.right||''}</div></header>`}<div class="body" id="scroll">${v.body}</div>${v.foot||''}</section>${S.toast?`<div class="toast" role="status">${esc(S.toast)}</div>`:''}`;
  if(S.view==='threads'&&render.last!==S.view+S.thread+S.threads[S.thread].msgs.length){const sc=document.getElementById('scroll');sc.scrollTop=sc.scrollHeight}
  else if(render.keepTop!=null){document.getElementById('scroll').scrollTop=render.keepTop}
@@ -417,6 +459,7 @@ function ask(){const el=document.getElementById('ask');const t=el?el.value.trim(
 document.addEventListener('input',e=>{if(e.target.id==='composer')S.draft=e.target.value; if(e.target.id==='f-name'||e.target.id==='f-inst')readForm()});
 document.addEventListener('keydown',e=>{if(e.key!=='Enter'||e.shiftKey||e.isComposing)return;if(e.target.id==='composer'){e.preventDefault();send()}else if(e.target.id==='ask'){e.preventDefault();ask()}});
 document.addEventListener('change',e=>{const t=e.target;if(t.dataset.act==='rule'){S.rules[+t.dataset.i].on=t.checked;toast(t.checked?L('策略已启用','Rule on'):L('策略已停用','Rule off'))}
+ if(t.dataset.act==='modtoggle'){const m=S.modules.find(x=>x.id===t.dataset.id);m.on=t.checked;toast(t.checked?L(`${P(m.n)} 已启用`,`${P(m.n)} is on`):L(`${P(m.n)} 已停用,它的页面和工具已卸载`,`${P(m.n)} is off. Its pages and tools are unloaded.`))}
  if(t.dataset.act==='chan'){S[t.dataset.k]=t.checked;toast(t.checked?L('渠道已启用','Channel on'):L('渠道已关闭,网站不受影响','Channel off. The web app is unaffected.'))}});
 document.addEventListener('submit',e=>{if(e.target.id!=='newbot')return;e.preventDefault();readForm();const f=S.form;const name=f.name.trim();
  if(!name){toast(L('请先给 Bot 起个名字','Give the bot a name first'));return}
@@ -427,7 +470,10 @@ document.addEventListener('submit',e=>{if(e.target.id!=='newbot')return;e.preven
  S.form=null;S.audit.unshift([now(),name,'bot.created','L1','ok']);go('bot',{bot:id,tab:'overview'});toast(L(`${name} 已创建,正在待命`,`${name} is created and on call`))});
 document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(!t||t.tagName==='INPUT')return;const a=t.dataset.act,id=t.dataset.id;
  const sc=document.getElementById('scroll');render.keepTop=sc?sc.scrollTop:null;
- if(a==='nav'){render.keepTop=null;go(id)}
+ if(a==='nav'){render.keepTop=null;id.startsWith('mod:')?go('mod',{mod:id.slice(4)}):go(id)}
+ else if(a==='push')pushModule();
+ else if(a==='promote'){const m=S.modules.find(x=>x.id===id);m.ch=m.ch==='dev'?'beta':'stable';S.audit.unshift([now(),'—','module.promote · '+m.id+'@'+m.v+' → '+m.ch,'L1','ok']);toast(m.ch==='beta'?L('已晋升到试用通道,对指定人群生效','Promoted to beta for the selected group'):L('第二位开发者审阅通过(模拟):先给 5% 用户,指标正常后自动放量','Second developer approved (simulated): 5% first, then automatic ramp-up'))}
+ else if(a==='rollback'){const m=S.modules.find(x=>x.id===id),p=vdec(m.v);if(!p){toast(L('没有更早的版本','No earlier version'))}else{m.v=p;S.audit.unshift([now(),'—','module.rollback · '+m.id+'@'+p,'L1','ok']);toast(L(`已回滚到 ${p},用时 3 秒(模拟)`,`Rolled back to ${p} in 3 s (simulated)`))}}
  else if(a==='thread'){render.keepTop=null;go('threads',{thread:id})}
  else if(a==='open-bot'){render.keepTop=null;go('bot',{bot:id,tab:'overview'})}
  else if(a==='tab'){S.tab=id;render()}
@@ -452,8 +498,8 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(
  else if(a==='toast')toast(t.dataset.msg);
 });
 setInterval(()=>{const h=document.getElementById('hand'),c=document.getElementById('dial-time');if(!h||!c)return;const d=new Date();h.setAttribute('transform',`rotate(${((d.getHours()+d.getMinutes()/60)/24*360).toFixed(2)} 200 200)`);c.textContent=hhmm(d)},20000);
-window.addEventListener('hashchange',()=>{const h=location.hash.slice(1);if(NAV.some(n=>n[0]===h)&&h!==S.view){S.view=h;render()}});
-const h0=location.hash.slice(1);if(NAV.some(n=>n[0]===h0))S.view=h0;
+window.addEventListener('hashchange',()=>{const h=location.hash.slice(1);if(HASHES.includes(h)&&h!==S.view){S.view=h;render()}});
+const h0=location.hash.slice(1);if(HASHES.includes(h0))S.view=h0;
 render();
 })();
 </script>
