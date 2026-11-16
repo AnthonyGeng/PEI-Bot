@@ -1,6 +1,6 @@
 # PEI Bot
 
-Perry Ellis International 内部的企业级 Agent 平台:员工创建 24x7 运行的 Bot,Bot 之间可以互相调用,模型经由 Vertex AI 上的 Gemini 自动选择或强制指定。
+Perry Ellis International 内部的企业级 Agent 平台:员工创建 24x7 运行的 Bot,Bot 之间可以互相调用,模型由 Gemini Decision 1 逐次自动选择,也可强制指定。网站可独立运作,Google Chat 和 Gmail 是可选入口。
 
 当前阶段:可行性评估。仓库里目前只有原型。
 
@@ -25,4 +25,5 @@ Perry Ellis International 内部的企业级 Agent 平台:员工创建 24x7 运�
 - 周期:约 38 周到全员可用,第 4 周有一个决定是否立项的验证关口。
 - 团队:约 9 人,80 人月。
 - 运行成本:1,000 名活跃员工、1,500 个 Bot 的假设下约 7 万美元/月(估算,单价待用官方报价复核)。
-- 模型路由优先级:管理员强制 > Bot 所有者指定 > 自动选模。
+- 模型路由优先级:管理员强制 > Bot 所有者指定 > Gemini Decision 1 自动选模。Decision 1 目前为预览版且尚未登陆 Vertex AI,期间由 Vertex 上的 Flash-Lite 兜底。
+- 入口:网站是主系统;Google Chat、Gmail 为可选渠道,关闭后不影响功能。

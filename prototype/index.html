@@ -1,323 +1,449 @@
 <title>PEI Bot 原型</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
 <style>
-/* Layout: one-screen workbench. Fixed left rail (navigation, threads, bots) + one working pane; the rail folds into a top bar on phones. */
+/* Layout: a night-shift desk. Left rail of swatch-tagged bots; the working pane opens on a 24-hour shift dial (the one loud element), everything else stays quiet around it. */
 :root{
-  --bg:#F3F5F8; --surface:#FFFFFF; --sunken:#E9EDF3; --ink:#131A27; --muted:#586377; --line:#D9DFE8;
-  --accent:#1B4FD6; --accent-soft:#E4ECFD; --on-accent:#FFFFFF;
-  --good:#17804F; --good-soft:#DDF3E8; --warn:#9A6408; --warn-soft:#FBEFD3; --crit:#B93225; --crit-soft:#FBE3E0;
-  --m-lite:#7C8AA5; --m-flash:#1B4FD6; --m-pro:#0E2A6E; --m-cu:#B45A0C;
-  --display:"Space Grotesk","PingFang SC","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif;
-  --body:"Inter","PingFang SC","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif;
-  --mono:"JetBrains Mono",ui-monospace,"SF Mono",Menlo,monospace;
-  --r:10px;
+  --bg:#080C1B; --bg2:#0D1330; --panel:#111836; --panel2:#182149; --ink:#EEF1FB; --muted:#98A2C8; --line:#252F60;
+  --accent:#8EA8FF; --on-accent:#0A0F24; --signal:#FFC24D; --good:#4FDDA8; --crit:#FF8475;
+  --s1:#7D95FF; --s2:#41D9B6; --s3:#FF8F6E; --s4:#FFC24D; --s5:#C993FF; --s6:#FF82B8; --on-sw:#0A0F24;
+  --glowA:rgba(125,149,255,.20); --glowB:rgba(255,143,110,.11); --twill:rgba(255,255,255,.022); --shadow:0 24px 60px -30px rgba(0,0,0,.7);
+  --display:"Bricolage Grotesque","PingFang SC","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif;
+  --body:"Geist","PingFang SC","Microsoft YaHei","Noto Sans SC",system-ui,sans-serif;
+  --mono:"Geist Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  color-scheme:dark;
 }
-@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#0E121A; --surface:#161C27; --sunken:#1D2431; --ink:#E7ECF4; --muted:#98A3B6; --line:#2A3242;
-  --accent:#7FA4FF; --accent-soft:#1C2A4D; --on-accent:#0B1020;
-  --good:#5FD39A; --good-soft:#143326; --warn:#E8B95A; --warn-soft:#3A2D10; --crit:#FF8A7C; --crit-soft:#431C18;
-  --m-lite:#8E9BB5; --m-flash:#7FA4FF; --m-pro:#C5D4FF; --m-cu:#F0A35B; color-scheme:dark}}
-:root[data-theme="dark"]{
-  --bg:#0E121A; --surface:#161C27; --sunken:#1D2431; --ink:#E7ECF4; --muted:#98A3B6; --line:#2A3242;
-  --accent:#7FA4FF; --accent-soft:#1C2A4D; --on-accent:#0B1020;
-  --good:#5FD39A; --good-soft:#143326; --warn:#E8B95A; --warn-soft:#3A2D10; --crit:#FF8A7C; --crit-soft:#431C18;
-  --m-lite:#8E9BB5; --m-flash:#7FA4FF; --m-pro:#C5D4FF; --m-cu:#F0A35B; color-scheme:dark}
+@media (prefers-color-scheme: light){:root:not([data-theme="dark"]){
+  --bg:#F2F3FB; --bg2:#E7EAF8; --panel:#FFFFFF; --panel2:#F1F3FD; --ink:#0D133E; --muted:#58628F; --line:#D8DDF2;
+  --accent:#2742F5; --on-accent:#FFFFFF; --signal:#A36100; --good:#0B8457; --crit:#C4352A;
+  --s1:#2742F5; --s2:#0A9C7E; --s3:#E4572E; --s4:#B87F00; --s5:#8B3FD9; --s6:#D42F7C; --on-sw:#FFFFFF;
+  --glowA:rgba(39,66,245,.10); --glowB:rgba(228,87,46,.08); --twill:rgba(13,19,62,.028); --shadow:0 24px 50px -32px rgba(13,19,62,.35);
+  color-scheme:light}}
+:root[data-theme="light"]{
+  --bg:#F2F3FB; --bg2:#E7EAF8; --panel:#FFFFFF; --panel2:#F1F3FD; --ink:#0D133E; --muted:#58628F; --line:#D8DDF2;
+  --accent:#2742F5; --on-accent:#FFFFFF; --signal:#A36100; --good:#0B8457; --crit:#C4352A;
+  --s1:#2742F5; --s2:#0A9C7E; --s3:#E4572E; --s4:#B87F00; --s5:#8B3FD9; --s6:#D42F7C; --on-sw:#FFFFFF;
+  --glowA:rgba(39,66,245,.10); --glowB:rgba(228,87,46,.08); --twill:rgba(13,19,62,.028); --shadow:0 24px 50px -32px rgba(13,19,62,.35);
+  color-scheme:light}
 html,body{height:100%}
-body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.5}
+body{background:radial-gradient(900px 520px at 88% -8%,var(--glowA),transparent 62%),radial-gradient(720px 520px at -8% 108%,var(--glowB),transparent 60%),var(--bg);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.55}
 *{box-sizing:border-box}
 button,input,select,textarea{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
-#app{height:100%;display:grid;grid-template-columns:256px minmax(0,1fr)}
-.side{background:var(--surface);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:12px;padding-block:16px;gap:14px;overflow-y:auto}
-.brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:600;font-size:17px;letter-spacing:.01em}
-.brand i{width:26px;height:26px;border-radius:7px;background:var(--ink);display:grid;place-items:center;color:var(--surface);font-style:normal;font-size:12px}
-.tag{font-family:var(--body);font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+#app{height:100%;display:grid;grid-template-columns:264px minmax(0,1fr);position:relative}
+#app::before{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(135deg,var(--twill) 0 1px,transparent 1px 7px)}
+/* rail */
+.rail{position:relative;display:flex;flex-direction:column;gap:18px;min-height:0;overflow-y:auto;padding-block:20px;padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:14px;border-right:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--display);font-weight:800;font-size:19px;letter-spacing:-.01em;white-space:nowrap;flex:none}
+.brand .mark{width:28px;height:28px;flex:none;border-radius:8px;background:conic-gradient(from 210deg,var(--s1),var(--s2),var(--s4),var(--s3),var(--s5),var(--s1));display:grid;place-items:center}
+.brand .mark i{width:12px;height:12px;border-radius:50%;background:var(--bg)}
+.tag{font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border:1px dashed var(--line);border-radius:4px;padding:1px 5px}
 .nav{display:flex;flex-direction:column;gap:2px}
-.nav button,.item{display:flex;align-items:center;gap:9px;width:100%;text-align:left;background:none;border:0;border-radius:7px;padding:7px 9px;color:var(--ink)}
-.nav button:hover,.item:hover{background:var(--sunken)}
-.nav button[aria-current="page"],.item[aria-current="true"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
-.count{margin-left:auto;background:var(--crit);color:#fff;border-radius:9px;font-size:11px;font-weight:600;padding:0 6px;min-width:18px;text-align:center}
-.label{font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);padding:0 9px;display:flex;justify-content:space-between;align-items:center}
+.nav button,.item{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:0;border-radius:10px;padding:8px 10px;color:var(--muted);font-weight:500}
+.nav button:hover,.item:hover{background:var(--panel);color:var(--ink)}
+.nav button[aria-current="page"],.item[aria-current="true"]{background:var(--panel2);color:var(--ink)}
+.nav button[aria-current="page"]::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent);margin-left:-2px}
+.count{margin-left:auto;background:var(--signal);color:var(--on-accent);border-radius:9px;font-size:11px;font-weight:600;padding:0 6px;min-width:18px;text-align:center;font-family:var(--mono)}
+.lbl{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:0 10px;display:flex;justify-content:space-between;align-items:center}
 .group{display:flex;flex-direction:column;gap:2px}
-.item span.t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
-.av{flex:none;width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font-size:11px;font-weight:600;color:#fff;font-family:var(--display)}
-.av.lg{width:40px;height:40px;border-radius:11px;font-size:16px}
-.dot{flex:none;width:7px;height:7px;border-radius:50%;background:var(--muted);margin-left:auto}
-.dot.run{background:var(--good);box-shadow:0 0 0 3px var(--good-soft)}
-.dot.wait{background:var(--warn)}
-.foot{margin-top:auto;display:flex;gap:8px;align-items:center;font-size:12px;color:var(--muted);padding:0 9px}
-.main{min-width:0;min-height:0;display:flex;flex-direction:column}
-.head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-block:14px;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));border-bottom:1px solid var(--line);background:var(--surface)}
-.head h1{font-family:var(--display);font-size:18px;font-weight:600;margin:0;text-wrap:balance}
-.head .sub{color:var(--muted);font-size:12.5px}
+.item .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.dot{flex:none;width:7px;height:7px;border-radius:50%;background:var(--line);margin-left:auto}
+.dot.run{background:var(--good);animation:pulse 1.8s ease-in-out infinite}
+.dot.wait{background:var(--signal)}
+@keyframes pulse{50%{box-shadow:0 0 0 5px color-mix(in srgb,var(--good) 22%,transparent)}}
+.foot{margin-top:auto;display:flex;gap:8px;align-items:center;font-size:12px;color:var(--muted);padding:0 10px}
+/* swatch: a fabric sample with a pinked lower edge */
+.sw{--c:var(--s1);flex:none;width:26px;height:28px;background:var(--c);color:var(--on-sw);display:grid;place-items:center;font-family:var(--display);font-weight:800;font-size:12px;padding-bottom:3px;border-radius:5px 5px 0 0;-webkit-mask:conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) 50%/6.5px 100%;mask:conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) 50%/6.5px 100%}
+.sw.md{width:36px;height:38px;font-size:16px}
+/* main */
+.main{position:relative;min-width:0;min-height:0;display:flex;flex-direction:column}
+.head{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding-block:18px 14px;padding-left:max(28px,env(safe-area-inset-left,0px));padding-right:max(28px,env(safe-area-inset-right,0px))}
+.head h1{font-family:var(--display);font-size:22px;font-weight:700;letter-spacing:-.015em;margin:0;text-wrap:balance}
+.head .sub{color:var(--muted);font-size:13px}
 .sp{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.body{flex:1;min-height:0;overflow-y:auto;padding-block:20px;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
-.wrap{max-width:920px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
-.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 12px;font-weight:500;white-space:nowrap;flex:none}
-.brand{white-space:nowrap;flex:none}
+.body{flex:1;min-height:0;overflow-y:auto;padding-block:6px 28px;padding-left:max(28px,env(safe-area-inset-left,0px));padding-right:max(28px,env(safe-area-inset-right,0px))}
+.wrap{max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.btn{border:1px solid var(--line);background:var(--panel);border-radius:10px;padding:7px 14px;font-weight:500;white-space:nowrap;flex:none}
 .btn:hover{border-color:var(--muted)}
-.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
-.btn.sm{padding:3px 9px;font-size:12.5px}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
+.btn.pri:hover{filter:brightness(1.08)}
+.btn.sm{padding:4px 10px;font-size:12.5px;border-radius:8px}
 .btn.danger{color:var(--crit)}
-.pill{display:inline-flex;align-items:center;gap:5px;border-radius:99px;padding:1px 8px;font-size:11.5px;font-weight:600;white-space:nowrap}
-.pill.good{background:var(--good-soft);color:var(--good)} .pill.warn{background:var(--warn-soft);color:var(--warn)} .pill.crit{background:var(--crit-soft);color:var(--crit)} .pill.mute{background:var(--sunken);color:var(--muted)} .pill.acc{background:var(--accent-soft);color:var(--accent)}
-.model{font-family:var(--mono);font-size:11px;border:1px solid var(--line);border-radius:5px;padding:1px 6px;color:var(--muted);display:inline-flex;gap:6px;align-items:center;white-space:nowrap}
-.model b{width:7px;height:7px;border-radius:2px;display:inline-block}
-.msgs{display:flex;flex-direction:column;gap:18px}
-.msg{display:grid;grid-template-columns:32px minmax(0,1fr);gap:11px}
-.msg .av{width:32px;height:32px;border-radius:9px;font-size:13px}
-.msg .who{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-weight:600}
-.msg .who time{font-weight:400;color:var(--muted);font-size:12px}
-.msg p{margin:4px 0 0}
+.pill{display:inline-flex;align-items:center;gap:5px;border-radius:99px;padding:1px 9px;font-size:11.5px;font-weight:600;white-space:nowrap}
+.pill.good{background:color-mix(in srgb,var(--good) 16%,transparent);color:var(--good)}
+.pill.warn{background:color-mix(in srgb,var(--signal) 18%,transparent);color:var(--signal)}
+.pill.crit{background:color-mix(in srgb,var(--crit) 16%,transparent);color:var(--crit)}
+.pill.mute{background:var(--panel2);color:var(--muted)}
+.pill.acc{background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent)}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:var(--shadow)}
+.panel h3{margin:0 0 6px;font-family:var(--display);font-size:16px;font-weight:700;letter-spacing:-.01em}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.note{font-size:12.5px;color:var(--muted)}
+.mono{font-family:var(--mono);font-size:11.5px}
+/* desk hero */
+.hero{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:28px;align-items:center}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.display{font-family:var(--display);font-weight:800;font-size:clamp(34px,5vw,58px);line-height:1.04;letter-spacing:-.03em;margin:10px 0 14px;text-wrap:balance}
+.display em{font-style:normal;background:linear-gradient(92deg,var(--s1),var(--s2) 45%,var(--s4) 75%,var(--s3));-webkit-background-clip:text;background-clip:text;color:transparent}
+.lede{font-size:16px;color:var(--muted);max-width:44ch;margin:0 0 20px}
+.lede b{color:var(--ink);font-weight:600}
+.ask{display:flex;gap:8px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:7px;box-shadow:var(--shadow);max-width:520px}
+.ask input{flex:1;min-width:0;border:0;background:none;padding:6px 10px;outline:none}
+.ask:focus-within{border-color:var(--accent)}
+.facts{display:flex;gap:22px;flex-wrap:wrap;margin-top:20px}
+.facts div{display:flex;flex-direction:column}
+.facts b{font-family:var(--display);font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.facts span{font-size:12px;color:var(--muted)}
+.dial{position:relative;width:100%;max-width:440px;margin:0 auto;aspect-ratio:1}
+.dial::before{content:"";position:absolute;inset:6%;border-radius:50%;background:conic-gradient(from 0deg,transparent 0 290deg,var(--glowA) 360deg);-webkit-mask:radial-gradient(closest-side,transparent 38%,#000 39% 100%);mask:radial-gradient(closest-side,transparent 38%,#000 39% 100%);animation:spin 16s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.dial svg{position:relative;width:100%;height:100%;display:block;overflow:visible}
+.dial .track{fill:none;stroke:var(--line);stroke-width:1}
+.dial .seg{fill:none;stroke-width:9;stroke-linecap:round}
+.dial .seg.plan{opacity:.26}
+.dial .seg.live{animation:breathe 1.6s ease-in-out infinite}
+@keyframes breathe{50%{stroke-width:13}}
+.dial .tick{stroke:var(--muted);stroke-width:1;opacity:.5}
+.dial .tick.maj{opacity:1;stroke-width:1.5}
+.dial text{fill:var(--muted);font-family:var(--mono);font-size:10px}
+.dial .clock{fill:var(--ink);font-family:var(--display);font-weight:800;font-size:46px;letter-spacing:-.03em}
+.dial .hand{stroke:var(--ink);stroke-width:1.5}
+.legend{display:flex;gap:6px 14px;flex-wrap:wrap;justify-content:center;margin-top:6px}
+.legend button{display:flex;gap:7px;align-items:center;border:0;background:none;color:var(--muted);font-size:12.5px;padding:2px 4px;border-radius:6px}
+.legend button:hover{color:var(--ink)}
+.legend i{width:10px;height:10px;border-radius:3px;background:var(--c)}
+.cols{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px}
+.feed{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.feed li{display:grid;grid-template-columns:46px 26px minmax(0,1fr);gap:10px;align-items:start;padding:9px 0;border-top:1px solid var(--line)}
+.feed li:first-child{border-top:0}
+.feed time{font-family:var(--mono);font-size:11.5px;color:var(--muted);padding-top:3px}
+.feed b{font-weight:600}
+/* thread */
+.msgs{display:flex;flex-direction:column;gap:22px}
+.msg{display:grid;grid-template-columns:36px minmax(0,1fr);gap:12px}
+.msg.me{grid-template-columns:minmax(0,1fr);justify-items:end}
+.msg.me .bubble{background:var(--accent);color:var(--on-accent);border-radius:18px 18px 4px 18px;padding:10px 15px;max-width:min(560px,92%)}
+.msg.me .mention{color:inherit;text-decoration:underline;text-underline-offset:3px}
+.who{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;font-weight:600}
+.who time{font-weight:400;color:var(--muted);font-size:12px;font-family:var(--mono)}
+.msg p{margin:3px 0 0}
 .mention{color:var(--accent);font-weight:600}
 .steps{margin:8px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:3px;font-size:12.5px;color:var(--muted)}
-.steps li{display:flex;gap:7px;align-items:baseline}
-.steps li::before{content:"";flex:none;width:6px;height:6px;border-radius:50%;background:var(--good);transform:translateY(-1px)}
-.steps li.pending::before{background:var(--warn)}
-.steps code,.mono{font-family:var(--mono);font-size:11.5px}
-.card{border:1px solid var(--line);background:var(--surface);border-radius:var(--r);padding:14px}
-.card h3{margin:0 0 4px;font-size:14px;font-weight:600}
-.card.approve{border-color:var(--warn);margin-top:10px}
-.card.a2a{margin-top:10px;background:var(--sunken);border-style:dashed}
-.chain{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:12.5px;margin-top:6px}
-.chain span{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:1px 7px}
+.steps li{display:flex;gap:8px;align-items:baseline}
+.steps li::before{content:"";flex:none;width:5px;height:5px;border-radius:50%;background:var(--good);transform:translateY(-2px)}
+.steps li.pending::before{background:var(--signal)}
+.steps code{font-family:var(--mono);font-size:11.5px;color:var(--ink)}
+.rcpt{display:inline-flex;align-items:center;gap:8px;margin-top:9px;border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:3px 10px 3px 8px;font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.rcpt:hover{border-color:var(--muted);color:var(--ink)}
+.rcpt i{width:8px;height:8px;transform:rotate(45deg);background:var(--mc);border-radius:1.5px;flex:none}
+.rcpt b{color:var(--ink);font-weight:500}
+.dec{margin-top:8px;display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px 22px;max-width:680px}
+.dec h4{margin:0 0 6px;font-family:var(--mono);font-size:10.5px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.opt{display:grid;grid-template-columns:76px minmax(0,1fr) 34px;gap:8px;align-items:center;font-size:12px;color:var(--muted);padding:1.5px 0}
+.opt .bar{height:5px;border-radius:3px;background:var(--panel2);overflow:hidden}
+.opt .bar i{display:block;height:100%;background:var(--muted);border-radius:3px}
+.opt.on{color:var(--ink);font-weight:600}
+.opt.on .bar i{background:var(--accent)}
+.opt span:last-child{font-family:var(--mono);font-size:11px;text-align:right}
+.approve{border:1px solid color-mix(in srgb,var(--signal) 55%,var(--line));background:color-mix(in srgb,var(--signal) 6%,var(--panel));border-radius:14px;padding:14px;margin-top:10px}
+.a2a{border:1px dashed var(--line);border-radius:14px;padding:12px 14px;margin-top:10px;background:var(--panel)}
+.chain{display:flex;gap:6px;align-items:center;flex-wrap:wrap;font-size:12.5px;margin-top:8px}
+.chain span{border:1px solid var(--line);border-radius:7px;padding:1px 8px;background:var(--panel2)}
 .chain i{color:var(--muted);font-style:normal}
-.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .tbl-wrap{overflow-x:auto}
 table{border-collapse:collapse;width:100%;font-size:13px}
-th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
-th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:0}
+th{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:500}
 td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
-.composer{border-top:1px solid var(--line);background:var(--surface);padding-block:12px;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
-.composer .in{max-width:920px;margin:0 auto;display:flex;flex-direction:column;gap:8px}
-.composer textarea{width:100%;resize:none;border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:10px 12px;min-height:58px}
+.composer{padding-block:10px 18px;padding-left:max(28px,env(safe-area-inset-left,0px));padding-right:max(28px,env(safe-area-inset-right,0px))}
+.composer .in{max-width:980px;margin:0 auto;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:10px;display:flex;flex-direction:column;gap:8px;box-shadow:var(--shadow)}
+.composer .in:focus-within{border-color:var(--accent)}
+.composer textarea{width:100%;resize:none;border:0;background:none;padding:4px 6px;min-height:44px;outline:none}
 .chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-.chip{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:2px 10px;font-size:12.5px}
-.chip[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
-.botcard{display:flex;flex-direction:column;gap:8px;text-align:left}
-.botcard .top{display:flex;gap:10px;align-items:center}
-.botcard .nm{font-weight:600;font-size:15px}
-.botcard .ds{color:var(--muted);font-size:13px;min-height:39px}
-.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);overflow-x:auto}
-.tabs button{border:0;background:none;padding:8px 12px;border-bottom:2px solid transparent;color:var(--muted);white-space:nowrap}
-.tabs button[aria-selected="true"]{color:var(--accent);border-color:var(--accent);font-weight:600}
-.kv{display:grid;grid-template-columns:140px minmax(0,1fr);gap:6px 14px;font-size:13px}
+.chip{border:1px solid var(--line);background:none;border-radius:99px;padding:3px 11px;font-size:12.5px;color:var(--muted)}
+.chip:hover{color:var(--ink);border-color:var(--muted)}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
+/* bot cards */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:16px}
+.card{position:relative;display:flex;flex-direction:column;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:18px;overflow:hidden;padding:0;box-shadow:var(--shadow);transition:transform .18s,border-color .18s}
+button.card:hover{transform:translateY(-3px);border-color:var(--c)}
+.card .cloth{--c:var(--s1);height:84px;background:var(--c);color:var(--on-sw);padding:12px 16px;display:flex;justify-content:space-between;align-items:flex-start;background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.13) 0 1px,transparent 1px 5px);-webkit-mask:conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) 50%/12px 100%;mask:conic-gradient(from -45deg at bottom,#0000,#000 1deg 89deg,#0000 90deg) 50%/12px 100%}
+.card .cloth .code{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;opacity:.85}
+.card .cloth .big{font-family:var(--display);font-weight:800;font-size:44px;line-height:1;letter-spacing:-.04em}
+.card .in{padding:10px 16px 16px;display:flex;flex-direction:column;gap:8px}
+.card .nm{font-family:var(--display);font-weight:700;font-size:18px;letter-spacing:-.01em}
+.card .ds{color:var(--muted);font-size:13px;min-height:40px}
+.tabs{display:flex;gap:4px;overflow-x:auto;padding:4px;background:var(--panel);border:1px solid var(--line);border-radius:12px;align-self:flex-start;max-width:100%}
+.tabs button{border:0;background:none;padding:6px 13px;border-radius:8px;color:var(--muted);white-space:nowrap;font-weight:500}
+.tabs button[aria-selected="true"]{background:var(--panel2);color:var(--ink)}
+.kv{display:grid;grid-template-columns:140px minmax(0,1fr);gap:9px 16px;font-size:13.5px;margin:0}
 .kv dt{color:var(--muted)} .kv dd{margin:0}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
-.kpi .v{font-family:var(--display);font-size:26px;font-weight:600;font-variant-numeric:tabular-nums}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:16px}
+.kpi .v{font-family:var(--display);font-size:34px;font-weight:800;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1.1}
 .kpi .k{color:var(--muted);font-size:12.5px}
-.mix{display:flex;height:14px;border-radius:4px;overflow:hidden;gap:2px;margin:10px 0}
+.mix{display:flex;height:16px;border-radius:5px;overflow:hidden;gap:2px;margin:12px 0}
 .mix div{height:100%}
-.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
-.legend b{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px}
-.screen{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--surface)}
-.screen .bar{display:flex;gap:8px;align-items:center;background:var(--sunken);padding:7px 10px;font-size:12px;color:var(--muted)}
-.screen .bar u{flex:1;background:var(--surface);border-radius:5px;padding:2px 9px;text-decoration:none;font-family:var(--mono);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
-.screen .pg{padding:12px;position:relative}
-.hl{outline:2px solid var(--m-cu);outline-offset:-2px;background:var(--warn-soft)}
-.two{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:14px}
-.form{display:flex;flex-direction:column;gap:16px}
-.field{display:flex;flex-direction:column;gap:6px}
-.field>label,.field>.lb{font-weight:600;font-size:13px}
+.lg{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+.lg b{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:6px}
+.screen{border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--panel);box-shadow:var(--shadow)}
+.screen .bar{display:flex;gap:8px;align-items:center;background:var(--panel2);padding:8px 12px;font-size:12px;color:var(--muted)}
+.screen .bar u{flex:1;background:var(--panel);border-radius:6px;padding:2px 10px;text-decoration:none;font-family:var(--mono);font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.screen .pg{padding:12px}
+.hl td{background:color-mix(in srgb,var(--signal) 12%,transparent)}
+.two{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px}
+.form{display:flex;flex-direction:column;gap:20px}
+.field{display:flex;flex-direction:column;gap:7px}
+.field>label,.field>.lb{font-weight:600}
 .field small{color:var(--muted)}
-.field input[type=text],.field textarea,.field select{border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:8px 10px;width:100%}
-.note{font-size:12.5px;color:var(--muted);border-left:3px solid var(--line);padding:2px 10px}
-.banner{font-size:12.5px;color:var(--warn);background:var(--warn-soft);border-radius:8px;padding:6px 12px}
-.sw{appearance:none;width:34px;height:20px;border-radius:99px;background:var(--line);position:relative;cursor:pointer;flex:none;border:0}
-.sw::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--surface);transition:transform .15s}
-.sw:checked{background:var(--accent)} .sw:checked::after{transform:translateX(14px)}
-@media (prefers-reduced-motion: reduce){.sw::after{transition:none}}
-.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);border-radius:8px;padding:8px 14px;font-size:13px;z-index:20;max-width:calc(100% - 32px)}
-@media (max-width:820px){
+.field input[type=text],.field textarea{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:10px 12px;width:100%}
+.tg{appearance:none;width:36px;height:21px;border-radius:99px;background:var(--line);position:relative;cursor:pointer;flex:none;border:0;margin:0}
+.tg::after{content:"";position:absolute;top:2.5px;left:2.5px;width:16px;height:16px;border-radius:50%;background:var(--panel);transition:transform .15s}
+.tg:checked{background:var(--accent)} .tg:checked::after{transform:translateX(15px)}
+.tg:disabled{opacity:.6;cursor:default}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(22px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);border-radius:10px;padding:9px 16px;font-size:13px;z-index:20;max-width:calc(100% - 32px);box-shadow:var(--shadow)}
+.rise{animation:rise .5s cubic-bezier(.2,.7,.2,1) both}
+@keyframes rise{from{transform:translateY(10px)}}
+@media (prefers-reduced-motion: reduce){.dial::before,.dial .seg.live,.dot.run,.rise{animation:none}.card,.tg::after{transition:none}}
+@media (max-width:860px){
   #app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr)}
-  .side{flex-direction:row;align-items:center;border-right:0;border-bottom:1px solid var(--line);padding-block:8px;padding-right:max(16px,env(safe-area-inset-right,0px));overflow-x:auto;overflow-y:hidden;gap:10px}
-  .side .group,.side .foot .u,.side .label,.tag{display:none}
+  .rail{flex-direction:row;align-items:center;border-right:0;border-bottom:1px solid var(--line);padding-block:10px;padding-right:max(16px,env(safe-area-inset-right,0px));padding-left:max(16px,env(safe-area-inset-left,0px));overflow-x:auto;overflow-y:hidden;gap:12px}
+  .rail .group,.rail .lbl,.tag,.foot .u{display:none}
   .nav{flex-direction:row}.nav button{white-space:nowrap;width:auto}
   .foot{margin:0 0 0 auto;padding:0}
   .head,.body,.composer{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-  .two{grid-template-columns:minmax(0,1fr)} .kv{grid-template-columns:minmax(0,1fr)} .kv dt{margin-top:6px}
+  .hero,.cols,.two{grid-template-columns:minmax(0,1fr)} .kv{grid-template-columns:minmax(0,1fr)} .kv dt{margin-top:4px}
+  .dial{max-width:340px}
 }
 </style>
 <div id="app"></div>
 <script>
 (function(){
-const MODELS={lite:{n:'Gemini Flash-Lite',c:'var(--m-lite)'},flash:{n:'Gemini Flash',c:'var(--m-flash)'},pro:{n:'Gemini Pro',c:'var(--m-pro)'},cu:{n:'Gemini Computer Use',c:'var(--m-cu)'}};
-const COLORS=['#1B4FD6','#0E7C66','#8A4FD0','#B45A0C','#C2306E','#3A5A80','#5C6B1F'];
+const MODELS={lite:{n:'Gemini Flash-Lite',c:'var(--muted)'},flash:{n:'Gemini Flash',c:'var(--accent)'},pro:{n:'Gemini Pro',c:'var(--s5)'},cu:{n:'Gemini Computer Use',c:'var(--s4)'}};
+const TIERS=['lite','flash','pro'];
 let uid=100;
-const S={lang:'zh',view:'threads',thread:'t1',bot:'atlas',tab:'overview',draft:'',toast:'',
- forcedOn:true,
+const half=[];for(let h=0;h<24;h+=.5)half.push([h,h+.14]);
+const S={lang:'zh',view:'desk',thread:'t1',bot:'atlas',tab:'overview',draft:'',toast:'',open:{},engine:'decision',chat:true,gmail:true,
  bots:[
-  {id:'atlas',n:'Atlas',zh:'幕僚长',en:'Chief of Staff',d:['统筹其他 Bot,拆解任务并汇总结果','Coordinates other bots, splits work and reports back'],mode:'auto',pref:'balanced',st:'run',vis:'private',sched:['工作日 08:00 晨间简报','Weekdays 08:00 morning brief'],tools:['Mail','Calendar','Docs','Bot delegation'],cu:false,cost:38.2,appr:'L2'},
-  {id:'inbox',n:'Inbox',zh:'收件箱助手',en:'Inbox Assistant',d:['分拣邮件、起草回复、提醒待办','Triages mail, drafts replies, flags follow-ups'],mode:'auto',pref:'cost',st:'wait',vis:'private',sched:['每 30 分钟检查收件箱','Checks inbox every 30 min'],tools:['Mail','Calendar'],cu:false,cost:9.6,appr:'L2'},
-  {id:'merch',n:'Merch Analyst',zh:'销售分析',en:'Merch Analyst',d:['每周售罄率与库存报表,异常预警','Weekly sell-through and inventory reports with alerts'],mode:'auto',pref:'quality',st:'idle',vis:'dept',sched:['每周一 07:00 售罄周报','Mondays 07:00 sell-through report'],tools:['BI warehouse','Sheets','Docs'],cu:false,cost:51.4,appr:'L2'},
-  {id:'po',n:'PO Tracker',zh:'采购订单跟踪',en:'PO Tracker',d:['登录供应商门户巡检延迟订单(门户无 API)','Checks the vendor portal for late orders (portal has no API)'],mode:'pinned',pin:'cu',st:'idle',vis:'private',sched:['每日 06:30 门户巡检','Daily 06:30 portal check'],tools:['Vendor portal (UI)','Sheets'],cu:true,cost:142.7,appr:'L2'}
+  {id:'atlas',sw:1,code:'PE·ATL·01',n:'Atlas',zh:'幕僚长',en:'Chief of Staff',d:['统筹其他 Bot,拆解任务并汇总结果','Coordinates other bots, splits work and reports back'],mode:'auto',pref:'balanced',st:'run',vis:'private',sched:['工作日 08:00 晨间简报','Weekdays 08:00 morning brief'],tools:['Gmail','Calendar','Drive','Bot delegation'],cu:false,cost:38.2,appr:'L2',shift:[[8,8.5],[9,9.4],[12,12.3],[17,17.6]]},
+  {id:'inbox',sw:2,code:'PE·INB·02',n:'Inbox',zh:'收件箱助手',en:'Inbox Assistant',d:['分拣 Gmail、起草回复、提醒待办','Triages Gmail, drafts replies, flags follow-ups'],mode:'auto',pref:'cost',st:'wait',vis:'private',sched:['每 30 分钟检查收件箱','Checks inbox every 30 min'],tools:['Gmail','Calendar'],cu:false,cost:9.6,appr:'L2',shift:half},
+  {id:'merch',sw:3,code:'PE·MRC·03',n:'Merch Analyst',zh:'销售分析',en:'Merch Analyst',d:['每周售罄率与库存报表,异常预警','Weekly sell-through and inventory reports with alerts'],mode:'auto',pref:'quality',st:'idle',vis:'dept',sched:['每周一 07:00 售罄周报','Mondays 07:00 sell-through report'],tools:['BI warehouse','Sheets','Drive'],cu:false,cost:51.4,appr:'L2',shift:[[7,7.8],[9.05,9.3],[15,15.5]]},
+  {id:'po',sw:4,code:'PE·POT·04',n:'PO Tracker',zh:'采购订单跟踪',en:'PO Tracker',d:['登录供应商门户巡检延迟订单(门户无 API)','Checks the vendor portal for late orders (portal has no API)'],mode:'pinned',pin:'cu',st:'idle',vis:'private',sched:['每日 06:30 门户巡检','Daily 06:30 portal check'],tools:['Vendor portal (UI)','Sheets'],cu:true,cost:142.7,appr:'L2',shift:[[6.5,7.1],[14,14.4]]}
  ],
  dir:[
-  {id:'budget',n:'Budget Check',own:['财务运营部','Finance Ops'],d:['查询成本中心预算与执行差异','Looks up budget vs. actual by cost center'],caps:['query_budget_variance','get_cost_center'],vis:['全公司','Company'],calls:412},
-  {id:'contract',n:'Contract Review',own:['法务部','Legal'],d:['按公司条款库审阅合同并标注风险','Reviews contracts against the clause library'],caps:['review_contract','explain_clause'],vis:['全公司','Company'],calls:187},
-  {id:'eta',n:'Shipment ETA',own:['物流部','Logistics'],d:['按订单号查询在途货物与预计到港','Tracks in-transit shipments by PO number'],caps:['get_eta','list_delays'],vis:['全公司','Company'],calls:655},
-  {id:'helpdesk',n:'IT Helpdesk',own:['IT 服务台','IT Service Desk'],d:['账号、设备、权限申请与常见问题','Accounts, devices, access requests and FAQs'],caps:['open_ticket','reset_guide','request_access'],vis:['全公司','Company'],calls:1290},
-  {id:'policy',n:'HR Policy Q&A',own:['人力资源部','HR'],d:['回答休假、报销、差旅政策问题','Answers leave, expense and travel policy questions'],caps:['ask_policy'],vis:['全公司','Company'],calls:903}
+  {id:'budget',sw:5,code:'FIN·BUD',n:'Budget Check',own:['财务运营部','Finance Ops'],d:['查询成本中心预算与执行差异','Looks up budget vs. actual by cost center'],caps:['query_budget_variance','get_cost_center'],calls:412},
+  {id:'contract',sw:6,code:'LEG·CTR',n:'Contract Review',own:['法务部','Legal'],d:['按公司条款库审阅合同并标注风险','Reviews contracts against the clause library'],caps:['review_contract','explain_clause'],calls:187},
+  {id:'eta',sw:2,code:'LOG·ETA',n:'Shipment ETA',own:['物流部','Logistics'],d:['按订单号查询在途货物与预计到港','Tracks in-transit shipments by PO number'],caps:['get_eta','list_delays'],calls:655},
+  {id:'helpdesk',sw:1,code:'IT·HLP',n:'IT Helpdesk',own:['IT 服务台','IT Service Desk'],d:['账号、设备、权限申请与常见问题','Accounts, devices, access requests and FAQs'],caps:['open_ticket','reset_guide','request_access'],calls:1290},
+  {id:'policy',sw:3,code:'HR·POL',n:'HR Policy Q&A',own:['人力资源部','HR'],d:['回答休假、报销、差旅政策问题','Answers leave, expense and travel policy questions'],caps:['ask_policy'],calls:903}
  ],
- approvals:[{id:'a1',bot:'inbox',lvl:'L2',t:['向 3 位外部客户发送跟进邮件','Send follow-up emails to 3 external customers'],dt:['收件人为外部域名;正文含售罄数据摘要','External recipients; body includes sell-through summary'],st:'pending',thread:'t1'},
+ approvals:[{id:'a1',bot:'inbox',lvl:'L2',t:['用 Gmail 向 3 位外部客户发送跟进邮件','Send follow-up emails to 3 external customers from Gmail'],dt:['收件人为外部域名;正文含售罄数据摘要','External recipients; body includes sell-through summary'],st:'pending',thread:'t1'},
   {id:'a2',bot:'po',lvl:'L2',t:['在供应商门户提交 2 张订单的催货请求','Submit expedite requests for 2 POs in the vendor portal'],dt:['界面操作;提交后无法撤回','UI action; cannot be undone once submitted'],st:'pending',thread:'t2'}],
+ feed:[['06:31','po',['巡检供应商门户,发现 2 张延迟订单','Checked the vendor portal, found 2 late POs']],['07:00','merch',['生成售罄周报并写入 Sheets','Built the sell-through report in Sheets']],['08:00','atlas',['晨间简报已发到你的 Gmail','Morning brief sent to your Gmail']],['09:05','atlas',['调用财务部的 Budget Check 对比预算','Called Finance\'s Budget Check for variance']],['09:07','inbox',['起草 3 封跟进邮件,等你批准','Drafted 3 follow-ups, waiting on you']]],
  threads:{
   t1:{title:["Fall '27 批发售罄复盘","Fall '27 wholesale sell-through review"],msgs:[
-   {from:'me',time:'09:02',txt:["@Atlas 准备周一的售罄率复盘:拉出上周各品牌的售罄数据,对比预算,再把给主要客户的跟进邮件起草好。","@Atlas prep Monday's sell-through review: pull last week's numbers by brand, compare to budget, and draft follow-ups to key accounts."]},
-   {from:'atlas',time:'09:02',model:'pro',why:['自动 · 多步规划','auto · multi-step planning'],txt:["计划分三步:① @Merch Analyst 拉取售罄数据;② 调用财务部的 Budget Check 对比预算;③ @Inbox 起草跟进邮件。现在开始。","Plan: (1) @Merch Analyst pulls sell-through; (2) I call Finance's Budget Check for variance; (3) @Inbox drafts the follow-ups. Starting now."],steps:[['委派给 Merch Analyst','Delegated to Merch Analyst'],['委派给 Inbox','Delegated to Inbox']]},
-   {from:'merch',time:'09:04',model:'flash',why:['自动 · 结构化查询','auto · structured query'],txt:["上周售罄数据已取回(示例数据):","Last week's sell-through is in (example data):"],steps:[['<code>bi.query</code> 数据仓库 · 1 次','<code>bi.query</code> warehouse · 1 call'],['<code>sheets.write</code> 写入周报表','<code>sheets.write</code> weekly sheet']],table:[['品牌 A','Brand A','61.4%','+2.1'],['品牌 B','Brand B','48.9%','-6.2'],['品牌 C','Brand C','55.0%','+0.4']]},
-   {from:'atlas',time:'09:05',model:'flash',why:['自动 · 工具调用','auto · tool call'],txt:["已向财务部的 Bot 查询预算差异。","Asked Finance's bot for budget variance."],a2a:{to:'Budget Check',own:['财务运营部','Finance Ops'],cap:'query_budget_variance',hops:2,res:['品牌 B 低于预算 6.2%,其余在 ±3% 以内','Brand B is 6.2% under budget; others within ±3%']}},
-   {from:'inbox',time:'09:07',model:'lite',why:['所有者偏好 · 成本优先','owner preference · cost first'],txt:["3 封跟进邮件已起草,发送给外部客户需要你批准。","3 follow-up emails are drafted. Sending to external customers needs your approval."],steps:[['<code>mail.draft</code> × 3','<code>mail.draft</code> × 3']],approval:'a1'}
+   {id:'m1',from:'me',time:'09:02',txt:["@Atlas 准备周一的售罄率复盘:拉出上周各品牌的售罄数据,对比预算,再把给主要客户的跟进邮件起草好。","@Atlas prep Monday's sell-through review: pull last week's numbers by brand, compare to budget, and draft follow-ups to key accounts."]},
+   {id:'m2',from:'atlas',time:'09:02',model:'pro',dec:{tier:[.03,.21,.76],think:[.08,.3,.62],ui:.02,risk:[.93,.06,.01,0],ms:192},txt:["计划分三步:① @Merch Analyst 拉取售罄数据;② 调用财务部的 Budget Check 对比预算;③ @Inbox 起草跟进邮件。现在开始。","Plan: (1) @Merch Analyst pulls sell-through; (2) I call Finance's Budget Check for variance; (3) @Inbox drafts the follow-ups. Starting now."],steps:[['委派给 Merch Analyst','Delegated to Merch Analyst'],['委派给 Inbox','Delegated to Inbox']]},
+   {id:'m3',from:'merch',time:'09:04',model:'flash',dec:{tier:[.12,.81,.07],think:[.7,.26,.04],ui:.01,risk:[.9,.1,0,0],ms:171},txt:["上周售罄数据已取回(示例数据):","Last week's sell-through is in (example data):"],steps:[['<code>bi.query</code> 数据仓库 · 1 次','<code>bi.query</code> warehouse · 1 call'],['<code>sheets.write</code> 写入周报表','<code>sheets.write</code> weekly sheet']],table:[['品牌 A','Brand A','61.4%','+2.1'],['品牌 B','Brand B','48.9%','-6.2'],['品牌 C','Brand C','55.0%','+0.4']]},
+   {id:'m4',from:'atlas',time:'09:05',model:'flash',dec:{tier:[.2,.76,.04],think:[.82,.16,.02],ui:.01,risk:[.95,.05,0,0],ms:164},txt:["已向财务部的 Bot 查询预算差异。","Asked Finance's bot for budget variance."],a2a:{to:'Budget Check',own:['财务运营部','Finance Ops'],cap:'query_budget_variance',hops:2,res:['品牌 B 低于预算 6.2%,其余在 ±3% 以内','Brand B is 6.2% under budget; others within ±3%']}},
+   {id:'m5',from:'inbox',time:'09:07',model:'lite',dec:{tier:[.58,.39,.03],think:[.88,.11,.01],ui:.02,risk:[.02,.09,.86,.03],ms:158},txt:["3 封跟进邮件已起草,发送给外部客户需要你批准。","3 follow-up emails are drafted. Sending to external customers needs your approval."],steps:[['<code>gmail.draft</code> × 3','<code>gmail.draft</code> × 3']],approval:'a1'}
   ]},
   t2:{title:['PO Tracker 每日巡检','PO Tracker daily check'],msgs:[
-   {from:'po',time:'06:31',model:'cu',why:['所有者指定 · 界面操作','pinned by owner · UI control'],txt:["今日巡检完成:供应商门户中有 2 张订单延迟超过 5 天。我可以提交催货请求,这一步需要你批准。","Daily check done: 2 POs in the vendor portal are more than 5 days late. I can submit expedite requests; that step needs your approval."],steps:[['唤醒沙箱 · 登录门户(凭证来自保险库)','Woke sandbox · signed in (credentials from vault)'],['筛选延迟订单 · 14 步界面操作','Filtered late orders · 14 UI steps'],['<code>sheets.write</code> 更新跟踪表','<code>sheets.write</code> updated tracker']],approval:'a2'}
+   {id:'m6',from:'po',time:'06:31',model:'cu',fixed:['所有者指定,未调用 Decision 1','Pinned by owner, Decision 1 skipped'],txt:["今日巡检完成:供应商门户中有 2 张订单延迟超过 5 天。我可以提交催货请求,这一步需要你批准。","Daily check done: 2 POs in the vendor portal are more than 5 days late. I can submit expedite requests; that step needs your approval."],steps:[['唤醒沙箱 · 登录门户(凭证来自保险库)','Woke sandbox · signed in (credentials from vault)'],['筛选延迟订单 · 14 步界面操作','Filtered late orders · 14 UI steps'],['<code>sheets.write</code> 更新跟踪表','<code>sheets.write</code> updated tracker']],approval:'a2'}
   ]}
  },
  rules:[{on:true,scope:['财务、法务部门的 Bot','Finance and Legal bots'],model:'pro',why:['结论需可靠,禁止降档','Reliability first; no downgrade']},
-  {on:true,scope:['标记为"含客户个人信息"的请求','Requests tagged as containing customer PII'],model:'flash',why:['仅限已正式发布的模型','Generally available models only']},
+  {on:true,scope:['Decision 1 判定含敏感数据的请求','Requests Decision 1 flags as sensitive'],model:'flash',why:['仅限已正式发布的模型','Generally available models only']},
   {on:false,scope:['单 Bot 月花费超过预算 80%','Any bot above 80% of monthly budget'],model:'lite',why:['超支前自动降档','Downgrade before overspend']}],
- audit:[['09:07','Inbox','mail.draft × 3','L1','ok'],['09:05','Atlas','a2a → Budget Check · query_budget_variance','L0','ok'],['09:04','Merch Analyst','bi.query','L0','ok'],['06:31','PO Tracker','ui.session · vendor portal · 14 steps','L1','ok'],['06:31','PO Tracker','vault.inject · portal credential','L1','ok'],['昨天 17:40','Atlas','mail.send → external','L2','denied']],
+ audit:[['09:07','Inbox','gmail.draft × 3','L1','ok'],['09:05','Atlas','a2a → Budget Check · query_budget_variance','L0','ok'],['09:04','Merch Analyst','bi.query','L0','ok'],['09:02','Atlas','decision · tier=pro conf=0.76','L0','ok'],['06:31','PO Tracker','ui.session · vendor portal · 14 steps','L1','ok'],['06:31','PO Tracker','vault.inject · portal credential','L1','ok'],['昨天 17:40','Atlas','gmail.send → external','L2','denied']],
  form:null
 };
 try{const l=localStorage.getItem('peibot-lang');if(l)S.lang=l;}catch(e){}
 const L=(zh,en)=>S.lang==='zh'?zh:en, P=a=>a[S.lang==='zh'?0:1];
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const bot=id=>S.bots.find(b=>b.id===id);
-const color=id=>{const i=[...S.bots,...S.dir].findIndex(b=>b.id===id);return COLORS[(i<0?0:i)%COLORS.length]};
-const av=(id,cls='')=>id==='me'?`<span class="av ${cls}" style="background:var(--ink);color:var(--surface)">${L('我','Me')}</span>`:`<span class="av ${cls}" style="background:${color(id)}">${esc(((bot(id)||S.dir.find(d=>d.id===id)||{n:'?'}).n)[0])}</span>`;
-const modelTag=(m,why)=>`<span class="model"><b style="background:${MODELS[m].c}"></b>${MODELS[m].n}${why?' · '+esc(why):''}</span>`;
-const stPill=s=>s==='run'?`<span class="pill good">${L('运行中','Working')}</span>`:s==='wait'?`<span class="pill warn">${L('等待审批','Awaiting approval')}</span>`:`<span class="pill mute">${L('休眠','Asleep')}</span>`;
-const policyText=b=>b.mode==='pinned'?L('固定 · ','Pinned · ')+MODELS[b.pin].n:L('自动 · ','Auto · ')+({quality:L('质量优先','quality first'),balanced:L('均衡','balanced'),cost:L('成本优先','cost first')}[b.pref]);
+const any=id=>bot(id)||S.dir.find(d=>d.id===id)||{n:'?',sw:1};
+const sw=(id,cls='')=>`<span class="sw ${cls}" style="--c:var(--s${any(id).sw})">${esc(any(id).n[0])}</span>`;
+const stPill=s=>s==='run'?`<span class="pill good">${L('运行中','Working')}</span>`:s==='wait'?`<span class="pill warn">${L('等你批准','Waiting on you')}</span>`:`<span class="pill mute">${L('休眠','Asleep')}</span>`;
+const policyText=b=>b.mode==='pinned'?L('固定 · ','Pinned · ')+MODELS[b.pin].n:'Decision 1 · '+({quality:L('质量优先','quality first'),balanced:L('均衡','balanced'),cost:L('成本优先','cost first')}[b.pref]);
 const visText=v=>({private:L('仅自己','Only me'),dept:L('本部门','My department'),company:L('全公司','Company')}[v]);
 const pending=()=>S.approvals.filter(a=>a.st==='pending').length;
 const mentions=t=>{let h=esc(t);[...S.bots].sort((a,b)=>b.n.length-a.n.length).forEach(b=>{h=h.split('@'+esc(b.n)).join(`<span class="mention">&#64;${esc(b.n)}</span>`)});return h};
+const hhmm=d=>String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+const now=()=>hhmm(new Date());
 
-/* ---- model router (same decision order as the plan: admin rule > owner pin > auto) ---- */
+/* ---- routing: admin rule > owner pin > Decision 1 (simulated here with keyword rules) ---- */
 function route(b,text){
- if(b.mode==='pinned')return{m:b.pin,why:L('所有者指定','pinned by owner')};
- const t=text.toLowerCase();
- if(/(登录|点击|打开网页|门户|portal|click|browse|log ?in)/.test(t))return{m:'cu',why:L('自动 · 需要界面操作','auto · needs UI control')};
- let tier=/(分析|对比|规划|计划|为什么|预测|复盘|方案|analy|compare|plan|why|forecast|review|strategy)/.test(t)||text.length>120?2:/(起草|总结|汇总|查|draft|summar|find|list|report)/.test(t)||text.length>40?1:0;
+ if(b.mode==='pinned')return{m:b.pin,fixed:['所有者指定,未调用 Decision 1','Pinned by owner, Decision 1 skipped']};
+ const t=text.toLowerCase(), ui=/(登录|点击|打开网页|门户|portal|click|browse|log ?in)/.test(t);
+ let tier=/(分析|对比|规划|计划|为什么|预测|复盘|方案|原因|analy|compare|plan|why|forecast|review|strategy)/.test(t)||text.length>120?2:/(起草|总结|汇总|查|draft|summar|find|list|report)/.test(t)||text.length>40?1:0;
  if(b.pref==='quality')tier=Math.min(2,tier+1); if(b.pref==='cost')tier=Math.max(0,tier-1);
- const m=['lite','flash','pro'][tier];
- return{m,why:[L('自动 · 简单请求','auto · simple request'),L('自动 · 常规任务','auto · routine task'),L('自动 · 复杂推理','auto · complex reasoning')][tier]};
+ const top=.72+((text.length*7)%20)/100, rest=1-top, tp=[0,0,0].map((_,i)=>i===tier?top:Math.abs(i-tier)===1?rest*(tier===1?.5:.8):rest*.2);
+ const th=tier===2?[.1,.32,.58]:tier===1?[.62,.33,.05]:[.9,.09,.01];
+ const ext=/(发送|发给|send|email|外部)/.test(t);
+ return{m:ui?'cu':TIERS[tier],dec:{tier:tp,think:th,ui:ui?.94:.03,risk:ext?[.03,.12,.82,.03]:[.9,.09,.01,0],ms:150+(text.length*13)%90}};
 }
-function now(){const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
 function send(){
  const text=S.draft.trim(); if(!text)return;
- const th=S.threads[S.thread]; th.msgs.push({from:'me',time:now(),raw:text}); S.draft='';
+ const th=S.threads[S.thread]; th.msgs.push({id:'m'+(uid++),from:'me',time:now(),raw:text}); S.draft='';
  let targets=S.bots.filter(b=>text.includes('@'+b.n)); if(!targets.length)targets=[bot('atlas')||S.bots[0]];
  targets.forEach((b,i)=>{
   const r=route(b,text); b.st='run';
-  const m={from:b.id,time:now(),model:r.m,why:[r.why,r.why],raw:L('正在处理…','Working on it…'),steps:[],sim:true}; th.msgs.push(m);
-  const plan=[[L('模型网关选模:','Model gateway picked ')+MODELS[r.m].n,600],[L('读取线程上下文与长期记忆','Read thread context and memory'),1300],[b.cu?L('唤醒沙箱并操作界面','Woke sandbox and drove the UI'):L('调用工具:','Called tools: ')+b.tools.slice(0,2).join(', '),2100]];
+  const m={id:'m'+(uid++),from:b.id,time:now(),model:r.m,dec:r.dec,fixed:r.fixed,raw:L('正在处理…','Working on it…'),steps:[],sim:true}; th.msgs.push(m); S.open[m.id]=!!r.dec&&i===0;
+  const plan=[[r.dec?L(`Decision 1 在 ${r.dec.ms} 毫秒内选定 `,`Decision 1 picked in ${r.dec.ms} ms: `)+MODELS[r.m].n:L('按所有者设置使用 ','Owner setting: ')+MODELS[r.m].n,500],[L('读取线程上下文与长期记忆','Read thread context and memory'),1300],[b.cu?L('唤醒沙箱并操作界面','Woke sandbox and drove the UI'):L('调用工具:','Called tools: ')+b.tools.slice(0,2).join(', '),2100]];
   plan.forEach(([s,t])=>setTimeout(()=>{m.steps.push([s,s]);render()},t+i*300));
-  setTimeout(()=>{m.raw=L(`已完成(模拟回复)。真实平台中,${b.n} 会在这里给出结果,并在需要对外发送或修改数据时弹出审批卡片。`,`Done (simulated reply). On the real platform ${b.n} would report results here and raise an approval card before sending or changing anything external.`);b.st='idle';S.audit.unshift([now(),b.n,'model.call · '+MODELS[r.m].n,'L0','ok']);render()},2900+i*300);
+  setTimeout(()=>{m.raw=L(`已完成(模拟回复)。真实平台中,${b.n} 会在这里给出结果,并在需要对外发送或修改数据时弹出审批卡片。`,`Done (simulated reply). On the real platform ${b.n} would report results here and raise an approval card before sending or changing anything external.`);b.st='idle';S.audit.unshift([now(),b.n,r.dec?'decision · tier='+r.m+' conf='+Math.max(...r.dec.tier).toFixed(2):'model.pinned · '+r.m,'L0','ok']);render()},2900+i*300);
  });
  render();
 }
 function decide(id,ok){const a=S.approvals.find(x=>x.id===id);a.st=ok?'approved':'rejected';const b=bot(a.bot);if(b)b.st='idle';S.audit.unshift([now(),b?b.n:a.bot,(ok?'approval.granted':'approval.rejected')+' · '+a.lvl,a.lvl,ok?'ok':'denied']);toast(ok?L('已批准,Bot 继续执行','Approved. The bot continues.'):L('已驳回,Bot 已停止该步骤','Rejected. The bot stopped that step.'));}
 function toast(t){S.toast=t;render();clearTimeout(toast.h);toast.h=setTimeout(()=>{S.toast='';render()},2600)}
-function go(v,extra){Object.assign(S,{view:v},extra||{});try{history.replaceState(null,'','#'+v)}catch(e){location.hash=v}render()}
+function go(v,extra){Object.assign(S,{view:v},extra||{});try{history.replaceState(null,'','#'+v)}catch(e){}render()}
 
-/* ---- views ---- */
+/* ---- pieces ---- */
 function approvalCard(id){const a=S.approvals.find(x=>x.id===id);if(!a)return'';
  const btn=a.st==='pending'?`<button class="btn pri sm" data-act="approve" data-id="${a.id}">${L('批准','Approve')}</button><button class="btn sm danger" data-act="reject" data-id="${a.id}">${L('驳回','Reject')}</button>`:a.st==='approved'?`<span class="pill good">${L('已批准','Approved')}</span>`:`<span class="pill crit">${L('已驳回','Rejected')}</span>`;
- return `<div class="card approve"><div class="row"><span class="pill warn">${L('需要审批','Approval needed')} · ${a.lvl}</span><strong>${P(a.t)}</strong></div><div class="note" style="margin:8px 0">${P(a.dt)}</div><div class="row">${btn}</div></div>`}
-function msgHtml(m){const b=m.from==='me'?null:bot(m.from);const body=m.raw!=null?mentions(m.raw):mentions(P(m.txt));
- return `<div class="msg">${av(m.from)}<div><div class="who">${m.from==='me'?L('你','You'):esc(b?b.n:m.from)}${m.model?modelTag(m.model,P(m.why)):''}<time>${m.time}</time>${m.sim?`<span class="pill mute">${L('模拟','simulated')}</span>`:''}</div><p>${body}</p>
- ${m.table?`<div class="tbl-wrap"><table style="max-width:420px;margin-top:6px"><tr><th>${L('品牌','Brand')}</th><th class="n">${L('售罄率','Sell-through')}</th><th class="n">${L('较预算(百分点)','vs. budget (pts)')}</th></tr>${m.table.map(r=>`<tr><td>${L(r[0],r[1])}</td><td class="n">${r[2]}</td><td class="n">${r[3]}</td></tr>`).join('')}</table></div>`:''}
+ return `<div class="approve"><div class="row"><span class="pill warn">${L('需要批准','Needs approval')} · ${a.lvl}</span><strong>${P(a.t)}</strong></div><div class="note" style="margin:6px 0 10px">${P(a.dt)}</div><div class="row">${btn}</div></div>`}
+function opts(title,labels,probs,chosen){return `<div><h4>${title}</h4>${labels.map((l,i)=>`<div class="opt ${i===chosen?'on':''}"><span>${l}</span><div class="bar"><i style="width:${Math.round(probs[i]*100)}%"></i></div><span>${probs[i].toFixed(2)}</span></div>`).join('')}</div>`}
+function receipt(m){
+ if(!m.model)return'';
+ const mc=MODELS[m.model].c;
+ if(!m.dec)return `<span class="rcpt" style="--mc:${mc}"><i></i><b>${MODELS[m.model].n}</b>${m.fixed?P(m.fixed):''}</span>`;
+ const d=m.dec, ti=d.tier.indexOf(Math.max(...d.tier)), hi=d.think.indexOf(Math.max(...d.think)), ri=d.risk.indexOf(Math.max(...d.risk));
+ const eng=S.engine==='decision'?'Decision 1':L('兜底 Flash-Lite','Fallback Flash-Lite');
+ const head=`<button class="rcpt" style="--mc:${mc}" data-act="rcpt" data-id="${m.id}" aria-expanded="${!!S.open[m.id]}"><i></i>${eng} → <b>${MODELS[m.model].n}</b>${Math.round(d.tier[ti]*100)}% · ${d.ms} ms</button>`;
+ if(!S.open[m.id])return head;
+ return head+`<div class="dec">${opts(L('模型档位','Model tier'),['Flash-Lite','Flash','Pro'],d.tier,ti)}${opts(L('思考深度','Thinking'),[L('低','Low'),L('中','Medium'),L('高','High')],d.think,hi)}${opts(L('动作风险','Action risk'),['L0','L1','L2','L3'],d.risk,ri)}${opts(L('需要界面操作','Needs UI control'),[L('否','No'),L('是','Yes')],[1-d.ui,d.ui],d.ui>.5?1:0)}</div>`}
+function msgHtml(m){
+ const body=m.raw!=null?mentions(m.raw):mentions(P(m.txt));
+ if(m.from==='me')return `<div class="msg me"><div class="bubble">${body}</div></div>`;
+ const b=bot(m.from);
+ return `<div class="msg">${sw(m.from,'md')}<div><div class="who">${esc(b?b.n:m.from)}<time>${m.time}</time>${m.sim?`<span class="pill mute">${L('模拟','simulated')}</span>`:''}</div><p>${body}</p>
+ ${m.table?`<div class="tbl-wrap"><table style="max-width:440px;margin-top:6px"><tr><th>${L('品牌','Brand')}</th><th class="n">${L('售罄率','Sell-through')}</th><th class="n">${L('较预算(百分点)','vs. budget (pts)')}</th></tr>${m.table.map(r=>`<tr><td>${L(r[0],r[1])}</td><td class="n">${r[2]}</td><td class="n">${r[3]}</td></tr>`).join('')}</table></div>`:''}
  ${m.steps&&m.steps.length?`<ul class="steps">${m.steps.map(s=>`<li>${P(s)}</li>`).join('')}</ul>`:''}
- ${m.a2a?`<div class="card a2a"><div class="row"><span class="pill acc">${L('Bot 互调','Bot-to-bot call')} · A2A</span><span class="mono">${m.a2a.cap}</span></div><div class="chain"><span>${L('你','You')}</span><i>→</i><span>Atlas</span><i>→</i><span>${m.a2a.to} · ${P(m.a2a.own)}</span><i>${L(`第 ${m.a2a.hops} 跳,上限 4`,`hop ${m.a2a.hops} of 4`)}</i></div><p style="font-size:13px">${L('返回:','Returned: ')}${P(m.a2a.res)}</p></div>`:''}
- ${m.approval?approvalCard(m.approval):''}</div></div>`}
+ ${m.a2a?`<div class="a2a"><div class="row"><span class="pill acc">${L('Bot 互调','Bot-to-bot call')} · A2A</span><span class="mono">${m.a2a.cap}</span></div><div class="chain"><span>${L('你','You')}</span><i>→</i><span>Atlas</span><i>→</i><span>${m.a2a.to} · ${P(m.a2a.own)}</span><i>${L(`第 ${m.a2a.hops} 跳,上限 4`,`hop ${m.a2a.hops} of 4`)}</i></div><p style="font-size:13px">${L('返回:','Returned: ')}${P(m.a2a.res)}</p></div>`:''}
+ ${m.approval?approvalCard(m.approval):''}<div>${receipt(m)}</div></div></div>`}
+function dial(){
+ const C=200,d=new Date(),nh=d.getHours()+d.getMinutes()/60;
+ const pt=(r,h)=>{const a=h/24*2*Math.PI-Math.PI/2;return[(C+r*Math.cos(a)).toFixed(1),(C+r*Math.sin(a)).toFixed(1)]};
+ const arc=(r,h1,h2)=>{const p=pt(r,h1),q=pt(r,h2);return `M${p[0]} ${p[1]}A${r} ${r} 0 0 1 ${q[0]} ${q[1]}`};
+ const bots=S.bots.slice(0,5);let g='';
+ for(let h=0;h<24;h++){const a=pt(h%6?170:167,h),b=pt(175,h);g+=`<line class="tick ${h%6?'':'maj'}" x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}"/>`}
+ [0,6,12,18].forEach(h=>{const p=pt(190,h);g+=`<text x="${p[0]}" y="${+p[1]+3.5}" text-anchor="middle">${String(h).padStart(2,'0')}</text>`});
+ bots.forEach((b,i)=>{const r=156-i*17;g+=`<circle class="track" cx="${C}" cy="${C}" r="${r}"/>`;
+  (b.shift||[]).forEach(s=>{const cls=s[1]<=nh?'':s[0]<=nh?'live':'plan';g+=`<path class="seg ${cls}" d="${arc(r,s[0],s[1])}" stroke="var(--s${b.sw})"/>`})});
+ const deg=nh/24*360;
+ g+=`<g id="hand" transform="rotate(${deg.toFixed(2)} ${C} ${C})"><line class="hand" x1="${C}" y1="${C-64}" x2="${C}" y2="${C-178}"/><circle cx="${C}" cy="${C-178}" r="3.5" fill="var(--ink)"/></g>`;
+ g+=`<text id="dial-time" class="clock" x="${C}" y="${C+10}" text-anchor="middle">${hhmm(d)}</text><text x="${C}" y="${C+32}" text-anchor="middle">${L(`${S.bots.length} 个 Bot 值班中`,`${S.bots.length} bots on shift`)}</text>`;
+ return `<div><div class="dial"><svg viewBox="0 0 400 400" role="img" aria-label="${L('24 小时值班盘:每一圈是一个 Bot,弧线是它工作的时段','24-hour shift dial: one ring per bot, arcs mark when it worked')}">${g}</svg></div><div class="legend">${bots.map(b=>`<button data-act="open-bot" data-id="${b.id}" style="--c:var(--s${b.sw})"><i></i>${esc(b.n)}</button>`).join('')}</div></div>`}
+
+/* ---- views ---- */
+function vDesk(){const pend=S.approvals.filter(a=>a.st==='pending');const d=new Date();
+ return {bare:true,body:`<div class="wrap rise" style="gap:30px;padding-top:26px">
+ <section class="hero"><div><div class="eyebrow">${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} · ${L('值班台 · 示例数据','Shift desk · example data')}</div>
+ <h1 class="display">${L('你不在的时候,<br><em>它们没停。</em>','While you were away,<br><em>they kept going.</em>')}</h1>
+ <p class="lede">${L(`过去 24 小时,${S.bots.length} 个 Bot 完成了 <b>61 次运行</b>,其中 <b>${pend.length} 件事</b>等你点头。`,`In the last 24 hours your ${S.bots.length} bots finished <b>61 runs</b>. <b>${pend.length}</b> of them need your say-so.`)}</p>
+ <div class="ask"><input id="ask" aria-label="${L('交代一件事','Hand off a task')}" placeholder="${L('交代一件事,Atlas 会分派给合适的 Bot','Hand off a task. Atlas will route it to the right bot')}"><button class="btn pri" data-act="ask">${L('交给 Bot','Hand it off')}</button></div>
+ <div class="facts"><div><b>84%</b><span>${L('运行由 Flash 及以下完成','of runs stayed on Flash or below')}</span></div><div><b>180 ms</b><span>${L('Decision 1 选模中位耗时','median Decision 1 routing time')}</span></div><div><b>$7.84</b><span>${L('过去 24 小时花费','spent in the last 24 hours')}</span></div></div></div>
+ ${dial()}</section>
+ <section class="cols"><div class="panel"><h3>${L('等你决定','Waiting on you')}</h3>${pend.length?pend.map(a=>`<div style="margin-top:12px"><div class="row note">${sw(a.bot)} ${esc(any(a.bot).n)}</div>${approvalCard(a.id)}</div>`).join(''):`<p class="note">${L('没有待批事项,Bot 都在按计划工作。','Nothing to approve. The bots are working to plan.')}</p>`}</div>
+ <div class="panel"><h3>${L('它们做了什么','What they did')}</h3><ul class="feed">${S.feed.map(f=>`<li><time>${f[0]}</time>${sw(f[1])}<div><b>${esc(any(f[1]).n)}</b> ${P(f[2])}</div></li>`).join('')}</ul></div></section></div>`}}
 function vThreads(){const th=S.threads[S.thread];
  const parts=[...new Set(th.msgs.map(m=>m.from).filter(f=>f!=='me'))];
- return {title:P(th.title),sub:L(`${parts.length} 个 Bot 参与`,`${parts.length} bots in this thread`),right:parts.map(p=>av(p)).join(''),
+ return {title:P(th.title),sub:L(`${parts.length} 个 Bot 参与`,`${parts.length} bots in this thread`),right:parts.map(p=>sw(p)).join(''),
  body:`<div class="wrap"><div class="msgs">${th.msgs.map(msgHtml).join('')}</div></div>`,
- foot:`<div class="composer"><div class="in"><div class="chips"><span style="font-size:12.5px;color:var(--muted)">${L('拉进线程:','Bring in:')}</span>${S.bots.map(b=>`<button class="chip" data-act="mention" data-id="${b.id}">@${esc(b.n)}</button>`).join('')}</div><div class="row" style="align-items:flex-end;flex-wrap:nowrap"><textarea id="composer" aria-label="${L('消息','Message')}" placeholder="${L('给 Bot 布置任务,用 @ 指定由谁来做;不指定时由 Atlas 统筹','Give the bots a task. Use @ to pick who does it; Atlas coordinates by default')}">${esc(S.draft)}</textarea><button class="btn pri" data-act="send">${L('发送','Send')}</button></div></div></div>`}}
-function botCard(b){return `<button class="card botcard" data-act="open-bot" data-id="${b.id}"><div class="top">${av(b.id,'lg')}<div style="min-width:0"><div class="nm">${esc(b.n)}</div><div style="color:var(--muted);font-size:12.5px">${esc(L(b.zh,b.en))}</div></div><span style="margin-left:auto">${stPill(b.st)}</span></div><div class="ds">${esc(P(b.d))}</div><div class="row">${modelTag(b.mode==='pinned'?b.pin:{quality:'pro',balanced:'flash',cost:'lite'}[b.pref],policyText(b).split(' · ')[0])}<span class="pill mute">${visText(b.vis)}</span>${b.cu?`<span class="pill mute">${L('有电脑','Has computer')}</span>`:''}</div></button>`}
-function vBots(){return {title:L('我的 Bot','My bots'),sub:L(`${S.bots.length} 个 · 24x7 待命,空闲时休眠不计费`,`${S.bots.length} bots · on call 24x7, asleep and unbilled when idle`),right:`<button class="btn pri" data-act="new-bot">${L('创建 Bot','Create bot')}</button>`,body:`<div class="wrap"><div class="grid">${S.bots.map(botCard).join('')}</div></div>`}}
+ foot:`<div class="composer"><div class="in"><textarea id="composer" aria-label="${L('消息','Message')}" placeholder="${L('给 Bot 布置任务,用 @ 指定由谁来做;不指定时由 Atlas 统筹','Give the bots a task. Use @ to pick who does it; Atlas coordinates by default')}">${esc(S.draft)}</textarea><div class="row"><div class="chips">${S.bots.map(b=>`<button class="chip" data-act="mention" data-id="${b.id}">@${esc(b.n)}</button>`).join('')}</div><span class="sp"><button class="btn pri" data-act="send">${L('发送','Send')}</button></span></div></div></div>`}}
+function botCard(b){return `<button class="card" style="--c:var(--s${b.sw})" data-act="open-bot" data-id="${b.id}"><div class="cloth" style="--c:var(--s${b.sw})"><span class="code">${esc(b.code)}</span><span class="big">${esc(b.n[0])}</span></div><div class="in"><div class="row"><span class="nm">${esc(b.n)}</span><span class="sp">${stPill(b.st)}</span></div><div class="note" style="margin-top:-6px">${esc(L(b.zh,b.en))}</div><div class="ds">${esc(P(b.d))}</div><div class="row"><span class="pill mute">${policyText(b)}</span><span class="pill mute">${visText(b.vis)}</span>${b.cu?`<span class="pill mute">${L('有电脑','Has computer')}</span>`:''}</div></div></button>`}
+function vBots(){return {title:L('我的 Bot','My bots'),sub:L(`${S.bots.length} 个 · 24x7 待命,空闲时休眠不计费`,`${S.bots.length} bots · on call 24x7, asleep and unbilled when idle`),right:`<button class="btn pri" data-act="new-bot">${L('创建 Bot','Create bot')}</button>`,body:`<div class="wrap rise"><div class="grid">${S.bots.map(botCard).join('')}</div></div>`}}
 const TABS=[['overview','概览','Overview'],['computer','电脑','Computer'],['skills','Skill','Skills'],['memory','记忆','Memory'],['routines','定时任务','Routines'],['activity','活动','Activity']];
 function vBot(){const b=bot(S.bot)||S.bots[0];let c='';
- if(S.tab==='overview')c=`<div class="card"><dl class="kv"><dt>${L('职责','Role')}</dt><dd>${esc(P(b.d))}</dd><dt>${L('模型策略','Model policy')}</dt><dd>${policyText(b)} <button class="btn sm" data-act="cycle-model" data-id="${b.id}">${L('切换','Change')}</button></dd><dt>${L('Bot 邮箱','Bot email')}</dt><dd class="mono">${esc(b.n.toLowerCase().replace(/\s+/g,'-'))}.bot@pei.example</dd><dt>${L('已授权工具','Granted tools')}</dt><dd>${b.tools.map(t=>`<span class="pill mute">${esc(t)}</span>`).join(' ')}</dd><dt>${L('审批门槛','Approval threshold')}</dt><dd>${L(`${b.appr} 及以上需要你批准(管理员下限:L2)`,`${b.appr} and above need your approval (admin floor: L2)`)}</dd><dt>${L('谁可以调用','Who can call it')}</dt><dd>${visText(b.vis)}</dd><dt>${L('本月花费','Spend this month')}</dt><dd>$${b.cost.toFixed(2)} / $200 ${L('上限','cap')}</dd></dl></div><div class="row"><button class="btn" data-act="start-thread" data-id="${b.id}">${L('和它对话','Message it')}</button><button class="btn danger" data-act="pause" data-id="${b.id}">${L('暂停 Bot','Pause bot')}</button></div>`;
- if(S.tab==='computer')c=b.cu?`<div class="two"><div class="screen"><div class="bar">${stPill(b.st)}<u>https://vendor-portal.example/orders?status=late</u></div><div class="pg tbl-wrap"><table><tr><th>PO</th><th>${L('供应商','Vendor')}</th><th>${L('应交日','Due')}</th><th class="n">${L('延迟(天)','Late (days)')}</th></tr><tr class="hl"><td class="mono">PO-48213</td><td>${L('供应商甲','Vendor One')}</td><td>11-06</td><td class="n">9</td></tr><tr class="hl"><td class="mono">PO-48377</td><td>${L('供应商乙','Vendor Two')}</td><td>11-09</td><td class="n">6</td></tr><tr><td class="mono">PO-48402</td><td>${L('供应商丙','Vendor Three')}</td><td>11-13</td><td class="n">2</td></tr></table><p class="note" style="margin-top:10px">${L('示意画面。真实平台中这里是沙箱浏览器的实时画面,可随时接管或中止。','Illustrative. On the real platform this is the live sandbox browser; you can take over or stop it at any time.')}</p></div></div><div class="card"><h3>${L('最近一次会话','Last session')}</h3><ul class="steps"><li>${L('06:30 定时器唤醒沙箱','06:30 timer woke the sandbox')}</li><li>${L('保险库注入门户凭证(模型不可见)','Vault injected portal credential (hidden from model)')}</li><li>${L('登录并打开订单列表','Signed in, opened order list')}</li><li>${L('筛选"延迟"并读取 3 行','Filtered "late", read 3 rows')}</li><li class="pending">${L('提交催货请求:等待审批','Submit expedite request: awaiting approval')}</li></ul><div class="row" style="margin-top:12px"><button class="btn sm" data-act="toast" data-msg="${L('已接管:Bot 暂停,由你操作','You have control. The bot is paused.')}">${L('接管','Take over')}</button><button class="btn sm" data-act="toast" data-msg="${L('截图回放将在这里播放','Screenshot replay would play here')}">${L('回放','Replay')}</button></div></div></div>`:`<div class="card"><h3>${L('这个 Bot 没有电脑','This bot has no computer')}</h3><p style="color:var(--muted);margin:0 0 10px">${L('它只通过 API 连接器工作,更快也更便宜。只有目标系统没有接口时才需要给 Bot 一台电脑。','It works through API connectors only, which is faster and cheaper. Give a bot a computer only when the target system has no API.')}</p><button class="btn" data-act="enable-cu" data-id="${b.id}">${L('为它开通电脑','Give it a computer')}</button></div>`;
- if(S.tab==='skills')c=`<div class="card"><div class="row"><h3 style="margin:0">${L('已掌握的 Skill','Skills it knows')}</h3><span class="sp"><button class="btn sm" data-act="record">${L('录屏教学','Teach by recording')}</button></span></div><div class="tbl-wrap"><table style="margin-top:8px"><tr><th>Skill</th><th>${L('来源','Source')}</th><th class="n">${L('运行次数','Runs')}</th><th>${L('回归测试','Regression')}</th></tr>${(b.skills||(b.skills=[[L('周报生成','Weekly report'),L('手写步骤','Written steps'),'46','ok'],[L('延迟订单催货','Expedite late POs'),L('录屏生成 · 已人工校对','From recording · reviewed'),'12','ok']])).map(s=>`<tr><td>${esc(s[0])}</td><td>${esc(s[1])}</td><td class="n">${s[2]}</td><td>${s[3]==='ok'?`<span class="pill good">${L('通过','Passing')}</span>`:`<span class="pill warn">${L('草稿待校对','Draft to review')}</span>`}</td></tr>`).join('')}</table></div></div><p class="note">${L('录屏教学:你操作一遍并录屏,平台用视频理解生成步骤草稿,你校对后才会发布为 Skill。','Teach by recording: do the task once on screen; the platform turns the video into draft steps, which you review before it becomes a skill.')}</p>`;
- if(S.tab==='memory')c=`<div class="card"><h3>${L('长期记忆','Long-term memory')}</h3><div class="tbl-wrap"><table><tr><th>${L('内容','Memory')}</th><th>${L('来源','Learned from')}</th><th></th></tr>${(b.mem||(b.mem=[[L('周报用"较预算差异(百分点)"而不是百分比','Reports show variance in points, not percent'),L('你的纠正 · 11-03','Your correction · 11-03')],[L('对外邮件一律先起草,不直接发送','Always draft external mail, never send directly'),L('你的指示 · 10-21','Your instruction · 10-21')],[L('周一 9 点前不要打扰','No pings before 9am Monday'),L('你的指示 · 10-14','Your instruction · 10-14')]])).map((m,i)=>`<tr><td>${esc(m[0])}</td><td style="color:var(--muted)">${esc(m[1])}</td><td><button class="btn sm danger" data-act="forget" data-i="${i}">${L('忘记','Forget')}</button></td></tr>`).join('')||`<tr><td colspan="3" style="color:var(--muted)">${L('还没有记忆','No memories yet')}</td></tr>`}</table></div></div>`;
- if(S.tab==='routines')c=`<div class="card"><h3>${L('定时与事件触发','Schedules and triggers')}</h3><div class="tbl-wrap"><table><tr><th>${L('触发条件','Trigger')}</th><th>${L('类型','Type')}</th><th>${L('启用','On')}</th></tr>${b.sched.length?`<tr><td>${esc(P(b.sched))}</td><td>${L('定时','Schedule')}</td><td><input type="checkbox" class="sw" id="sw-s-${b.id}" checked aria-label="${L('启用','On')}"></td></tr>`:''}<tr><td>${L('收到发给 Bot 邮箱的邮件','Mail arrives at the bot address')}</td><td>${L('事件','Event')}</td><td><input type="checkbox" class="sw" id="sw-m-${b.id}" checked aria-label="${L('启用','On')}"></td></tr><tr><td>${L('被其他 Bot 调用','Called by another bot')}</td><td>${L('事件','Event')}</td><td><input type="checkbox" class="sw" id="sw-a-${b.id}" ${b.vis==='private'?'':'checked'} aria-label="${L('启用','On')}"></td></tr></table></div></div>`;
- if(S.tab==='activity')c=`<div class="card">${auditTable(S.audit.filter(a=>a[1]===b.n))}</div>`;
- return {title:b.n,sub:esc(L(b.zh,b.en)),right:stPill(b.st),body:`<div class="wrap"><div class="tabs" role="tablist">${TABS.map(t=>`<button role="tab" aria-selected="${S.tab===t[0]}" data-act="tab" data-id="${t[0]}">${L(t[1],t[2])}</button>`).join('')}</div>${c}</div>`}}
-function auditTable(rows){return `<div class="tbl-wrap"><table><tr><th>${L('时间','Time')}</th><th>Bot</th><th>${L('动作','Action')}</th><th>${L('级别','Level')}</th><th>${L('结果','Result')}</th></tr>${rows.map(r=>`<tr><td class="mono">${esc(r[0])}</td><td>${esc(r[1])}</td><td class="mono">${esc(r[2])}</td><td>${r[3]}</td><td>${r[4]==='ok'?`<span class="pill good">${L('已执行','Done')}</span>`:`<span class="pill crit">${L('已拦截','Blocked')}</span>`}</td></tr>`).join('')||`<tr><td colspan="5" style="color:var(--muted)">${L('暂无记录','Nothing yet')}</td></tr>`}</table></div>`}
+ if(S.tab==='overview')c=`<div class="panel"><dl class="kv"><dt>${L('职责','Role')}</dt><dd>${esc(P(b.d))}</dd><dt>${L('模型策略','Model policy')}</dt><dd>${policyText(b)} <button class="btn sm" data-act="cycle-model" data-id="${b.id}">${L('切换','Change')}</button></dd><dt>${L('在哪里找到它','Where to reach it')}</dt><dd><span class="pill acc">${L('网站 · 始终可用','Web · always on')}</span> <span class="pill mute">Google Chat${S.chat?'':L(' · 已关闭',' · off')}</span> <span class="pill mute">Gmail${S.gmail?'':L(' · 已关闭',' · off')}</span></dd><dt>${L('Bot 邮箱','Bot address')}</dt><dd class="mono">${esc(b.n.toLowerCase().replace(/\s+/g,'-'))}.bot@pei.example</dd><dt>${L('已授权工具','Granted tools')}</dt><dd>${b.tools.map(t=>`<span class="pill mute">${esc(t)}</span>`).join(' ')}</dd><dt>${L('审批门槛','Approval threshold')}</dt><dd>${L(`${b.appr} 及以上需要你批准(管理员下限:L2)`,`${b.appr} and above need your approval (admin floor: L2)`)}</dd><dt>${L('谁可以调用','Who can call it')}</dt><dd>${visText(b.vis)}</dd><dt>${L('本月花费','Spend this month')}</dt><dd>$${b.cost.toFixed(2)} / $200 ${L('上限','cap')}</dd></dl></div><div class="row"><button class="btn pri" data-act="start-thread" data-id="${b.id}">${L('和它对话','Message it')}</button><button class="btn danger" data-act="pause" data-id="${b.id}">${L('暂停 Bot','Pause bot')}</button></div>`;
+ if(S.tab==='computer')c=b.cu?`<div class="two"><div class="screen"><div class="bar">${stPill(b.st)}<u>https://vendor-portal.example/orders?status=late</u></div><div class="pg tbl-wrap"><table><tr><th>PO</th><th>${L('供应商','Vendor')}</th><th>${L('应交日','Due')}</th><th class="n">${L('延迟(天)','Late (days)')}</th></tr><tr class="hl"><td class="mono">PO-48213</td><td>${L('供应商甲','Vendor One')}</td><td>11-06</td><td class="n">9</td></tr><tr class="hl"><td class="mono">PO-48377</td><td>${L('供应商乙','Vendor Two')}</td><td>11-09</td><td class="n">6</td></tr><tr><td class="mono">PO-48402</td><td>${L('供应商丙','Vendor Three')}</td><td>11-13</td><td class="n">2</td></tr></table><p class="note" style="margin:10px 0 0">${L('示意画面。真实平台中这里是沙箱浏览器的实时画面,可随时接管或中止。','Illustrative. On the real platform this is the live sandbox browser; you can take over or stop it at any time.')}</p></div></div><div class="panel"><h3>${L('最近一次会话','Last session')}</h3><ul class="steps"><li>${L('06:30 定时器唤醒沙箱','06:30 timer woke the sandbox')}</li><li>${L('保险库注入门户凭证(模型不可见)','Vault injected portal credential (hidden from model)')}</li><li>${L('登录并打开订单列表','Signed in, opened order list')}</li><li>${L('筛选"延迟"并读取 3 行','Filtered "late", read 3 rows')}</li><li class="pending">${L('提交催货请求:等你批准','Submit expedite request: waiting on you')}</li></ul><div class="row" style="margin-top:14px"><button class="btn sm" data-act="toast" data-msg="${L('已接管:Bot 暂停,由你操作','You have control. The bot is paused.')}">${L('接管','Take over')}</button><button class="btn sm" data-act="toast" data-msg="${L('截图回放将在这里播放','Screenshot replay would play here')}">${L('回放','Replay')}</button></div></div></div>`:`<div class="panel"><h3>${L('这个 Bot 没有电脑','This bot has no computer')}</h3><p class="note" style="margin:0 0 12px;font-size:13.5px">${L('它只通过 API 连接器工作,更快也更便宜。只有目标系统没有接口时才需要给 Bot 一台电脑。','It works through API connectors only, which is faster and cheaper. Give a bot a computer only when the target system has no API.')}</p><button class="btn" data-act="enable-cu" data-id="${b.id}">${L('为它开通电脑','Give it a computer')}</button></div>`;
+ if(S.tab==='skills')c=`<div class="panel"><div class="row"><h3 style="margin:0">${L('已掌握的 Skill','Skills it knows')}</h3><span class="sp"><button class="btn sm" data-act="record">${L('录屏教学','Teach by recording')}</button></span></div><div class="tbl-wrap"><table style="margin-top:8px"><tr><th>Skill</th><th>${L('来源','Source')}</th><th class="n">${L('运行次数','Runs')}</th><th>${L('回归测试','Regression')}</th></tr>${(b.skills||(b.skills=[[L('周报生成','Weekly report'),L('手写步骤','Written steps'),'46','ok'],[L('延迟订单催货','Expedite late POs'),L('录屏生成 · 已人工校对','From recording · reviewed'),'12','ok']])).map(s=>`<tr><td>${esc(s[0])}</td><td>${esc(s[1])}</td><td class="n">${s[2]}</td><td>${s[3]==='ok'?`<span class="pill good">${L('通过','Passing')}</span>`:`<span class="pill warn">${L('草稿待校对','Draft to review')}</span>`}</td></tr>`).join('')||`<tr><td colspan="4" class="note">${L('还没有 Skill','No skills yet')}</td></tr>`}</table></div></div><p class="note">${L('录屏教学:你操作一遍并录屏,平台用视频理解生成步骤草稿,你校对后才会发布为 Skill。','Teach by recording: do the task once on screen; the platform turns the video into draft steps, which you review before it becomes a skill.')}</p>`;
+ if(S.tab==='memory')c=`<div class="panel"><h3>${L('长期记忆','Long-term memory')}</h3><div class="tbl-wrap"><table><tr><th>${L('内容','Memory')}</th><th>${L('来源','Learned from')}</th><th></th></tr>${(b.mem||(b.mem=[[L('周报用"较预算差异(百分点)"而不是百分比','Reports show variance in points, not percent'),L('你的纠正 · 11-03','Your correction · 11-03')],[L('对外邮件一律先起草,不直接发送','Always draft external mail, never send directly'),L('你的指示 · 10-21','Your instruction · 10-21')],[L('周一 9 点前不要打扰','No pings before 9am Monday'),L('你的指示 · 10-14','Your instruction · 10-14')]])).map((m,i)=>`<tr><td>${esc(m[0])}</td><td class="note">${esc(m[1])}</td><td><button class="btn sm danger" data-act="forget" data-i="${i}">${L('忘记','Forget')}</button></td></tr>`).join('')||`<tr><td colspan="3" class="note">${L('还没有记忆','No memories yet')}</td></tr>`}</table></div></div>`;
+ if(S.tab==='routines')c=`<div class="panel"><h3>${L('定时与事件触发','Schedules and triggers')}</h3><div class="tbl-wrap"><table><tr><th>${L('触发条件','Trigger')}</th><th>${L('类型','Type')}</th><th>${L('启用','On')}</th></tr>${b.sched.length?`<tr><td>${esc(P(b.sched))}</td><td>${L('定时','Schedule')}</td><td><input type="checkbox" class="tg" id="tg-s-${b.id}" checked aria-label="${L('启用','On')}"></td></tr>`:''}<tr><td>${L('在网站线程里被 @','Mentioned in a web thread')}</td><td>${L('事件','Event')}</td><td><input type="checkbox" class="tg" id="tg-w-${b.id}" checked disabled aria-label="${L('始终启用','Always on')}"></td></tr><tr><td>${L('Gmail 收到发给 Bot 地址的邮件','Gmail receives mail at the bot address')}</td><td>${L('事件','Event')}</td><td><input type="checkbox" class="tg" id="tg-m-${b.id}" ${S.gmail?'checked':''} aria-label="${L('启用','On')}"></td></tr><tr><td>${L('被其他 Bot 调用','Called by another bot')}</td><td>${L('事件','Event')}</td><td><input type="checkbox" class="tg" id="tg-a-${b.id}" ${b.vis==='private'?'':'checked'} aria-label="${L('启用','On')}"></td></tr></table></div></div>`;
+ if(S.tab==='activity')c=`<div class="panel">${auditTable(S.audit.filter(a=>a[1]===b.n))}</div>`;
+ return {title:b.n,sub:esc(L(b.zh,b.en))+' · <span class="mono">'+esc(b.code)+'</span>',lead:sw(b.id,'md'),right:stPill(b.st),body:`<div class="wrap"><div class="tabs" role="tablist">${TABS.map(t=>`<button role="tab" aria-selected="${S.tab===t[0]}" data-act="tab" data-id="${t[0]}">${L(t[1],t[2])}</button>`).join('')}</div>${c}</div>`}}
+function auditTable(rows){return `<div class="tbl-wrap"><table><tr><th>${L('时间','Time')}</th><th>Bot</th><th>${L('动作','Action')}</th><th>${L('级别','Level')}</th><th>${L('结果','Result')}</th></tr>${rows.map(r=>`<tr><td class="mono">${esc(r[0])}</td><td>${esc(r[1])}</td><td class="mono">${esc(r[2])}</td><td>${r[3]}</td><td>${r[4]==='ok'?`<span class="pill good">${L('已执行','Done')}</span>`:`<span class="pill crit">${L('已拦截','Blocked')}</span>`}</td></tr>`).join('')||`<tr><td colspan="5" class="note">${L('暂无记录','Nothing yet')}</td></tr>`}</table></div>`}
 function vDir(){return {title:L('公司 Bot 目录','Company bot directory'),sub:L('其他同事和部门开放的 Bot,你和你的 Bot 都可以调用','Bots opened up by colleagues and departments, callable by you and your bots'),
- body:`<div class="wrap"><div class="grid">${S.dir.map(d=>`<div class="card botcard"><div class="top">${av(d.id,'lg')}<div style="min-width:0"><div class="nm">${esc(d.n)}</div><div style="color:var(--muted);font-size:12.5px">${P(d.own)}</div></div></div><div class="ds">${P(d.d)}</div><div><div style="font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">${L('对外能力','Exposed capabilities')}</div><div class="row">${d.caps.map(c=>`<span class="model">${c}</span>`).join('')}</div></div><div class="row"><span class="pill mute">${P(d.vis)}</span><span style="font-size:12.5px;color:var(--muted)">${L(`本月被调用 ${d.calls} 次`,`${d.calls} calls this month`)}</span><span class="sp"><button class="btn sm" data-act="grant" data-id="${d.id}">${d.granted?L('已授权 Atlas','Atlas can call'):L('允许 Atlas 调用','Let Atlas call it')}</button></span></div></div>`).join('')}</div><p class="note">${L('外部调用只能触发"对外能力"清单里的功能。调用链会带上发起人身份,被调用的 Bot 按发起人的数据权限作答。','Outside callers can only trigger the exposed capabilities. The call chain carries the requester identity, and the called bot answers with the requester\'s data permissions.')}</p></div>`}}
-function vAppr(){const rows=S.approvals;return {title:L('审批','Approvals'),sub:L(`${pending()} 项待处理`,`${pending()} pending`),body:`<div class="wrap">${rows.map(a=>`<div><div class="row" style="font-size:12.5px;color:var(--muted)">${av(a.bot)} ${esc((bot(a.bot)||{n:a.bot}).n)} · ${P(S.threads[a.thread].title)}</div>${approvalCard(a.id)}</div>`).join('')}</div>`}}
-function vAdmin(){const spend=S.bots.reduce((s,b)=>s+b.cost,0);
- const mix=[['lite',46],['flash',38],['pro',13],['cu',3]];
+ body:`<div class="wrap rise"><div class="grid">${S.dir.map(d=>`<div class="card"><div class="cloth" style="--c:var(--s${d.sw})"><span class="code">${d.code}</span><span class="big">${esc(d.n[0])}</span></div><div class="in"><div class="nm">${esc(d.n)}</div><div class="note" style="margin-top:-6px">${P(d.own)} · ${L(`本月被调用 ${d.calls} 次`,`${d.calls} calls this month`)}</div><div class="ds">${P(d.d)}</div><div class="row">${d.caps.map(c=>`<span class="pill mute mono">${c}</span>`).join('')}</div><div class="row" style="margin-top:4px"><button class="btn sm ${d.granted?'':'pri'}" data-act="grant" data-id="${d.id}">${d.granted?L('Atlas 已可调用 · 撤销','Atlas can call it · revoke'):L('允许 Atlas 调用','Let Atlas call it')}</button></div></div></div>`).join('')}</div><p class="note">${L('外部调用只能触发卡片上列出的对外能力。调用链会带上发起人身份,被调用的 Bot 按发起人的数据权限作答。','Outside callers can only trigger the capabilities listed on the card. The call chain carries the requester identity, and the called bot answers with the requester\'s data permissions.')}</p></div>`}}
+function vAppr(){return {title:L('审批','Approvals'),sub:L(`${pending()} 项待处理`,`${pending()} pending`),body:`<div class="wrap">${S.approvals.map(a=>`<div><div class="row note">${sw(a.bot)} ${esc(any(a.bot).n)} · ${P(S.threads[a.thread].title)}</div>${approvalCard(a.id)}</div>`).join('')}</div>`}}
+function vAdmin(){const mix=[['lite',46],['flash',38],['pro',13],['cu',3]];
  return {title:L('管理后台','Admin console'),sub:L('平台管理员视角 · 示例数据','Platform admin view · example data'),
- body:`<div class="wrap"><div class="kpis"><div class="card kpi"><div class="v">1,486</div><div class="k">${L('活跃 Bot','Active bots')}</div></div><div class="card kpi"><div class="v">982</div><div class="k">${L('周活跃员工','Weekly active employees')}</div></div><div class="card kpi"><div class="v">$41.3K</div><div class="k">${L('本月花费 · 预算 $72K','Spend this month · budget $72K')}</div></div><div class="card kpi"><div class="v">${pending()+35}</div><div class="k">${L('全公司待审批','Approvals pending company-wide')}</div></div></div>
- <div class="card"><h3>${L('模型调用占比(本月,按请求数)','Model mix (this month, by request)')}</h3><div class="mix" role="img" aria-label="${mix.map(m=>MODELS[m[0]].n+' '+m[1]+'%').join(', ')}">${mix.map(m=>`<div style="width:${m[1]}%;background:${MODELS[m[0]].c}"></div>`).join('')}</div><div class="legend">${mix.map(m=>`<span><b style="background:${MODELS[m[0]].c}"></b>${MODELS[m[0]].n} ${m[1]}%</span>`).join('')}</div><p class="note" style="margin:10px 0 0">${L('自动选模把 84% 的请求留在 Flash 及以下档位。','Auto routing keeps 84% of requests on Flash or below.')}</p></div>
- <div class="card"><div class="row"><h3 style="margin:0">${L('强制模型策略','Forced model rules')}</h3><span class="pill mute">${L('优先级高于所有者设置','Override owner settings')}</span></div><div class="tbl-wrap"><table style="margin-top:8px"><tr><th>${L('适用范围','Applies to')}</th><th>${L('强制模型','Forced model')}</th><th>${L('原因','Reason')}</th><th>${L('启用','On')}</th></tr>${S.rules.map((r,i)=>`<tr><td>${P(r.scope)}</td><td>${modelTag(r.model)}</td><td style="color:var(--muted)">${P(r.why)}</td><td><input type="checkbox" class="sw" id="rule-${i}" data-act="rule" data-i="${i}" ${r.on?'checked':''} aria-label="${L('启用','On')}"></td></tr>`).join('')}</table></div></div>
- <div class="card"><h3>${L('审批下限(所有者只能加严)','Approval floor (owners can only tighten)')}</h3><div class="tbl-wrap"><table><tr><th>${L('级别','Level')}</th><th>${L('动作举例','Example actions')}</th><th>${L('最低要求','Minimum')}</th></tr><tr><td>L0</td><td>${L('查询、汇总、起草','Read, summarize, draft')}</td><td>${L('自动执行','Automatic')}</td></tr><tr><td>L1</td><td>${L('可撤销的内部写入','Reversible internal writes')}</td><td>${L('自动执行,事后可见','Automatic, visible after')}</td></tr><tr><td>L2</td><td>${L('对外发送、改业务数据','External sends, business data changes')}</td><td><span class="pill warn">${L('所有者批准','Owner approval')}</span></td></tr><tr><td>L3</td><td>${L('付款、删除、改权限','Payments, deletes, permission changes')}</td><td><span class="pill crit">${L('双人批准','Two-person approval')}</span></td></tr></table></div></div>
- <div class="card"><h3>${L('审计日志(不可关闭)','Audit log (always on)')}</h3>${auditTable(S.audit)}</div>
- <p class="note">${L(`你自己的 ${S.bots.length} 个 Bot 本月合计 $${spend.toFixed(2)}。`,`Your own ${S.bots.length} bots total $${spend.toFixed(2)} this month.`)}</p></div>`}}
-const TPL=[['通用助手','General assistant','',''],['收件箱分拣','Inbox triage','每 30 分钟检查收件箱,把邮件分成"需我回复 / 仅知悉 / 可忽略",为第一类起草回复。','Every 30 minutes, sort mail into reply / FYI / ignore and draft replies for the first group.'],['每日简报','Daily brief','工作日早上 8 点,汇总日历、未读邮件和待办,发一份简报给我。','At 8am on weekdays, send me a brief of calendar, unread mail and to-dos.'],['报表生成','Report builder','每周一从数据仓库拉取指定指标,生成周报并标出异常。','Each Monday, pull the chosen metrics from the warehouse, build the weekly report and flag anomalies.'],['门户巡检','Portal checker','每天登录指定网站,检查状态变化并记录到表格。','Sign in to a given site daily, check for status changes and log them to a sheet.']];
+ body:`<div class="wrap rise"><div class="kpis"><div class="panel kpi"><div class="v">1,486</div><div class="k">${L('活跃 Bot','Active bots')}</div></div><div class="panel kpi"><div class="v">982</div><div class="k">${L('周活跃员工','Weekly active employees')}</div></div><div class="panel kpi"><div class="v">$41.3K</div><div class="k">${L('本月花费 · 预算 $72K','Spend this month · budget $72K')}</div></div><div class="panel kpi"><div class="v">${pending()+35}</div><div class="k">${L('全公司待审批','Approvals pending company-wide')}</div></div></div>
+ <div class="panel"><div class="row"><h3 style="margin:0">${L('自动选模引擎','Routing engine')}</h3><span class="sp chips"><button class="chip" aria-pressed="${S.engine==='decision'}" data-act="engine" data-id="decision">Gemini Decision 1</button><button class="chip" aria-pressed="${S.engine==='fallback'}" data-act="engine" data-id="fallback">${L('兜底:Flash-Lite','Fallback: Flash-Lite')}</button></span></div>
+ <p class="note" style="margin:8px 0 0">${S.engine==='decision'?L('每次运行前调用一次 Decision 1,同时回答模型档位、思考深度、动作风险、是否需要界面操作等问题。目前为预览版,尚未登陆 Vertex AI。','One Decision 1 call before each run answers model tier, thinking depth, action risk and whether UI control is needed. Preview only; not on Vertex AI yet.'):L('由 Vertex AI 上的 Flash-Lite 用结构化输出回答同样的问题。更慢、更贵,但完全在公司的 Vertex 项目内。','Flash-Lite on Vertex AI answers the same questions with structured output. Slower and costlier, but fully inside the company Vertex project.')}</p>
+ <div class="mix" role="img" aria-label="${mix.map(m=>MODELS[m[0]].n+' '+m[1]+'%').join(', ')}">${mix.map(m=>`<div style="width:${m[1]}%;background:${MODELS[m[0]].c}"></div>`).join('')}</div><div class="lg">${mix.map(m=>`<span><b style="background:${MODELS[m[0]].c}"></b>${MODELS[m[0]].n} ${m[1]}%</span>`).join('')}</div></div>
+ <div class="panel"><div class="row"><h3 style="margin:0">${L('强制模型策略','Forced model rules')}</h3><span class="pill mute">${L('优先于所有者设置和自动选模','Override owner settings and auto routing')}</span></div><div class="tbl-wrap"><table style="margin-top:8px"><tr><th>${L('适用范围','Applies to')}</th><th>${L('强制模型','Forced model')}</th><th>${L('原因','Reason')}</th><th>${L('启用','On')}</th></tr>${S.rules.map((r,i)=>`<tr><td>${P(r.scope)}</td><td class="mono">${MODELS[r.model].n}</td><td class="note">${P(r.why)}</td><td><input type="checkbox" class="tg" id="rule-${i}" data-act="rule" data-i="${i}" ${r.on?'checked':''} aria-label="${L('启用','On')}"></td></tr>`).join('')}</table></div></div>
+ <div class="panel"><h3>${L('入口渠道','Channels')}</h3><div class="tbl-wrap"><table><tr><th>${L('渠道','Channel')}</th><th>${L('作用','What it adds')}</th><th>${L('启用','On')}</th></tr><tr><td>${L('网站','Web app')}</td><td class="note">${L('全部功能。平台的主系统。','Everything. The system of record.')}</td><td><input type="checkbox" class="tg" id="ch-web" checked disabled aria-label="${L('始终启用','Always on')}"></td></tr><tr><td>Google Chat</td><td class="note">${L('在 Chat 里 @Bot、收通知、卡片审批','Mention bots, get notified and approve from Chat cards')}</td><td><input type="checkbox" class="tg" id="ch-chat" data-act="chan" data-k="chat" ${S.chat?'checked':''} aria-label="Google Chat"></td></tr><tr><td>Gmail</td><td class="note">${L('给 Bot 发邮件开启线程、邮件提醒','Email a bot to start a thread; email reminders')}</td><td><input type="checkbox" class="tg" id="ch-gmail" data-act="chan" data-k="gmail" ${S.gmail?'checked':''} aria-label="Gmail"></td></tr></table></div><p class="note" style="margin:10px 0 0">${S.chat||S.gmail?L('关闭 Google Chat 和 Gmail 后,平台仍可在网站上完整运作。','With Google Chat and Gmail off, the platform still works fully on the web.'):L('当前只有网站一个入口:对话、审批、通知都在站内完成。','Web is the only channel now: chat, approvals and notifications all happen in the app.')}</p></div>
+ <div class="panel"><h3>${L('审计日志(不可关闭)','Audit log (always on)')}</h3>${auditTable(S.audit)}</div></div>`}}
+const TPL=[['通用助手','General assistant','',''],['收件箱分拣','Inbox triage','每 30 分钟检查 Gmail,把邮件分成"需我回复 / 仅知悉 / 可忽略",为第一类起草回复。','Every 30 minutes, sort Gmail into reply / FYI / ignore and draft replies for the first group.'],['每日简报','Daily brief','工作日早上 8 点,汇总日历、未读邮件和待办,发一份简报给我。','At 8am on weekdays, send me a brief of calendar, unread mail and to-dos.'],['报表生成','Report builder','每周一从数据仓库拉取指定指标,生成周报并标出异常。','Each Monday, pull the chosen metrics from the warehouse, build the weekly report and flag anomalies.'],['门户巡检','Portal checker','每天登录指定网站,检查状态变化并记录到表格。','Sign in to a given site daily, check for status changes and log them to a sheet.']];
 function vNew(){const f=S.form;const chip=(k,v,t)=>`<button type="button" class="chip" aria-pressed="${f[k]===v}" data-act="set" data-k="${k}" data-v="${v}">${t}</button>`;
  return {title:L('创建 Bot','Create a bot'),sub:L('约 1 分钟;之后随时可改','About a minute. Everything can be changed later.'),
- body:`<div class="wrap" style="max-width:680px"><form class="form" id="newbot">
+ body:`<div class="wrap" style="max-width:700px"><form class="form panel" id="newbot">
  <div class="field"><span class="lb">${L('从模板开始','Start from a template')}</span><div class="chips">${TPL.map((t,i)=>`<button type="button" class="chip" aria-pressed="${f.tpl===i}" data-act="tpl" data-i="${i}">${L(t[0],t[1])}</button>`).join('')}</div></div>
  <div class="field"><label for="f-name">${L('名字','Name')}</label><input type="text" id="f-name" value="${esc(f.name)}" placeholder="${L('例如 Scout','e.g. Scout')}" maxlength="24"></div>
  <div class="field"><label for="f-inst">${L('它负责什么','What it does')}</label><textarea id="f-inst" rows="3" placeholder="${L('用平常的话描述它的职责、边界和汇报方式','Describe its job, its limits and how it should report, in plain words')}">${esc(f.inst)}</textarea></div>
- <div class="field"><span class="lb">${L('模型','Model')}</span><div class="chips">${chip('mode','auto',L('自动选择','Choose automatically'))}${chip('mode','pinned',L('固定一个模型','Pin one model'))}</div>
- ${f.mode==='auto'?`<div class="chips">${chip('pref','quality',L('质量优先','Quality first'))}${chip('pref','balanced',L('均衡','Balanced'))}${chip('pref','cost',L('成本优先','Cost first'))}</div><small>${L('平台按每次任务的难度在 Gemini 各档模型间选择,并在消息旁显示用了哪个模型。','The platform picks a Gemini tier per task and shows which one it used beside each message.')}</small>`:`<div class="chips">${Object.keys(MODELS).map(k=>chip('pin',k,MODELS[k].n)).join('')}</div>`}
- ${S.forcedOn?`<small>${L('注意:管理员的强制策略优先于这里的选择。','Note: admin forced rules override this choice.')}</small>`:''}</div>
- <div class="field"><span class="lb">${L('可以使用的工具','Tools it may use')}</span><div class="chips">${['Mail','Calendar','Docs','Sheets','BI warehouse','Bot delegation'].map(t=>`<button type="button" class="chip" aria-pressed="${f.tools.includes(t)}" data-act="tool" data-v="${t}">${t}</button>`).join('')}</div><small>${L('只能授予你自己已有的权限。','You can only grant access you already have.')}</small></div>
+ <div class="field"><span class="lb">${L('模型','Model')}</span><div class="chips">${chip('mode','auto',L('让 Decision 1 自动选','Let Decision 1 choose'))}${chip('mode','pinned',L('固定一个模型','Pin one model'))}</div>
+ ${f.mode==='auto'?`<div class="chips">${chip('pref','quality',L('质量优先','Quality first'))}${chip('pref','balanced',L('均衡','Balanced'))}${chip('pref','cost',L('成本优先','Cost first'))}</div><small>${L('每次任务前由 Gemini Decision 1 判断难度并选择模型档位,消息下方可以看到它的打分。','Before each task, Gemini Decision 1 judges the difficulty and picks a tier. Its scores show under each message.')}</small>`:`<div class="chips">${Object.keys(MODELS).map(k=>chip('pin',k,MODELS[k].n)).join('')}</div>`}
+ <small>${L('管理员的强制策略优先于这里的选择。','Admin forced rules override this choice.')}</small></div>
+ <div class="field"><span class="lb">${L('可以使用的工具','Tools it may use')}</span><div class="chips">${['Gmail','Calendar','Drive','Sheets','BI warehouse','Bot delegation'].map(t=>`<button type="button" class="chip" aria-pressed="${f.tools.includes(t)}" data-act="tool" data-v="${t}">${t}</button>`).join('')}</div><small>${L('只能授予你自己已有的权限。','You can only grant access you already have.')}</small></div>
  <div class="field"><span class="lb">${L('电脑','Computer')}</span><div class="chips">${chip('cu','no',L('不需要(推荐)','Not needed (recommended)'))}${chip('cu','yes',L('给它一台云电脑','Give it a cloud computer'))}</div><small>${L('只有要操作没有接口的网站或系统时才需要;成本明显更高。','Only for sites or systems without an API. Costs noticeably more.')}</small></div>
  <div class="field"><span class="lb">${L('什么时候工作','When it works')}</span><div class="chips">${chip('sched','none',L('被叫到时','When asked'))}${chip('sched','hourly',L('每小时','Hourly'))}${chip('sched','daily',L('每天早上','Every morning'))}${chip('sched','weekly',L('每周一','Every Monday'))}</div></div>
  <div class="field"><span class="lb">${L('谁可以调用它','Who can call it')}</span><div class="chips">${chip('vis','private',L('仅自己','Only me'))}${chip('vis','dept',L('本部门','My department'))}${chip('vis','company',L('全公司','Company'))}</div>${f.vis!=='private'?`<small>${L('开放后需要声明它的对外能力清单,别人和别人的 Bot 只能触发清单内的功能。','Once shared, you list its exposed capabilities. Others and their bots can only trigger those.')}</small>`:''}</div>
  <div class="row"><button type="submit" class="btn pri">${L('创建 Bot','Create bot')}</button><button type="button" class="btn" data-act="nav" data-id="bots">${L('取消','Cancel')}</button></div></form></div>`}}
 
 /* ---- shell ---- */
-const NAV=[['threads','线程','Threads'],['bots','我的 Bot','My bots'],['directory','公司目录','Directory'],['approvals','审批','Approvals'],['admin','管理后台','Admin']];
+const NAV=[['desk','值班台','Desk'],['threads','线程','Threads'],['bots','我的 Bot','My bots'],['directory','公司目录','Directory'],['approvals','审批','Approvals'],['admin','管理后台','Admin']];
 function render(){
- const keep=document.activeElement&&document.activeElement.id; const sel=keep&&document.activeElement.selectionStart;
- const v={threads:vThreads,bots:vBots,bot:vBot,directory:vDir,approvals:vAppr,admin:vAdmin,create:vNew}[S.view]();
+ const act=document.activeElement, keep=act&&act.id, sel=keep&&act.selectionStart;
+ const v={desk:vDesk,threads:vThreads,bots:vBots,bot:vBot,directory:vDir,approvals:vAppr,admin:vAdmin,create:vNew}[S.view]();
  const navOn=S.view==='bot'||S.view==='create'?'bots':S.view;
- document.getElementById('app').innerHTML=`<aside class="side"><div class="brand"><i>PE</i>PEI Bot <span class="tag">${L('原型','Prototype')}</span></div>
+ document.getElementById('app').innerHTML=`<aside class="rail"><div class="brand"><span class="mark"><i></i></span>PEI Bot <span class="tag">${L('原型','Proto')}</span></div>
  <nav class="nav" aria-label="${L('主导航','Main')}">${NAV.map(n=>`<button data-act="nav" data-id="${n[0]}" ${navOn===n[0]?'aria-current="page"':''}>${L(n[1],n[2])}${n[0]==='approvals'&&pending()?`<span class="count">${pending()}</span>`:''}</button>`).join('')}</nav>
- <div class="group"><div class="label">${L('线程','Threads')}</div>${Object.keys(S.threads).map(k=>`<button class="item" data-act="thread" data-id="${k}" aria-current="${S.view==='threads'&&S.thread===k}"><span class="t">${esc(P(S.threads[k].title))}</span></button>`).join('')}</div>
- <div class="group"><div class="label">${L('我的 Bot','My bots')}<button class="btn sm" data-act="new-bot" aria-label="${L('创建 Bot','Create bot')}">+</button></div>${S.bots.map(b=>`<button class="item" data-act="open-bot" data-id="${b.id}" aria-current="${S.view==='bot'&&S.bot===b.id}">${av(b.id)}<span class="t">${esc(b.n)}</span><span class="dot ${b.st==='run'?'run':b.st==='wait'?'wait':''}" title="${b.st}"></span></button>`).join('')}</div>
+ <div class="group"><div class="lbl">${L('线程','Threads')}</div>${Object.keys(S.threads).map(k=>`<button class="item" data-act="thread" data-id="${k}" aria-current="${S.view==='threads'&&S.thread===k}"><span class="t">${esc(P(S.threads[k].title))}</span></button>`).join('')}</div>
+ <div class="group"><div class="lbl">${L('值班 Bot','On shift')}<button class="btn sm" data-act="new-bot" aria-label="${L('创建 Bot','Create bot')}">+</button></div>${S.bots.map(b=>`<button class="item" data-act="open-bot" data-id="${b.id}" aria-current="${S.view==='bot'&&S.bot===b.id}">${sw(b.id)}<span class="t">${esc(b.n)}</span><span class="dot ${b.st==='run'?'run':b.st==='wait'?'wait':''}"></span></button>`).join('')}</div>
  <div class="foot"><button class="btn sm" data-act="lang" aria-label="Language">${S.lang==='zh'?'EN':'中文'}</button><span class="u">${L('示例账号','Demo account')}</span></div></aside>
- <section class="main"><header class="head"><div><h1>${esc(v.title)}</h1><div class="sub">${v.sub||''}</div></div><div class="sp">${v.right||''}</div></header><div class="body" id="scroll">${v.body}</div>${v.foot||''}</section>${S.toast?`<div class="toast" role="status">${esc(S.toast)}</div>`:''}`;
- if(S.view==='threads'){const sc=document.getElementById('scroll');sc.scrollTop=sc.scrollHeight}
+ <section class="main">${v.bare?'':`<header class="head">${v.lead||''}<div><h1>${esc(v.title)}</h1><div class="sub">${v.sub||''}</div></div><div class="sp">${v.right||''}</div></header>`}<div class="body" id="scroll">${v.body}</div>${v.foot||''}</section>${S.toast?`<div class="toast" role="status">${esc(S.toast)}</div>`:''}`;
+ if(S.view==='threads'&&render.last!==S.view+S.thread+S.threads[S.thread].msgs.length){const sc=document.getElementById('scroll');sc.scrollTop=sc.scrollHeight}
+ else if(render.keepTop!=null){document.getElementById('scroll').scrollTop=render.keepTop}
+ render.last=S.view==='threads'?S.view+S.thread+S.threads[S.thread].msgs.length:S.view;
  if(keep){const el=document.getElementById(keep);if(el){el.focus();try{if(sel!=null)el.setSelectionRange(sel,sel)}catch(e){}}}
 }
+const _render=render;
 function readForm(){const f=S.form;if(!f)return;const n=document.getElementById('f-name'),i=document.getElementById('f-inst');if(n)f.name=n.value;if(i)f.inst=i.value}
+function ask(){const el=document.getElementById('ask');const t=el?el.value.trim():'';if(!t){toast(L('先写下要交代的事','Write the task first'));return}S.draft=t;S.thread='t1';go('threads');send()}
 document.addEventListener('input',e=>{if(e.target.id==='composer')S.draft=e.target.value; if(e.target.id==='f-name'||e.target.id==='f-inst')readForm()});
-document.addEventListener('keydown',e=>{if(e.target.id==='composer'&&e.key==='Enter'&&!e.shiftKey&&!e.isComposing){e.preventDefault();send()}});
-document.addEventListener('change',e=>{const t=e.target;if(t.dataset.act==='rule'){S.rules[+t.dataset.i].on=t.checked;toast(t.checked?L('策略已启用','Rule on'):L('策略已停用','Rule off'))}});
+document.addEventListener('keydown',e=>{if(e.key!=='Enter'||e.shiftKey||e.isComposing)return;if(e.target.id==='composer'){e.preventDefault();send()}else if(e.target.id==='ask'){e.preventDefault();ask()}});
+document.addEventListener('change',e=>{const t=e.target;if(t.dataset.act==='rule'){S.rules[+t.dataset.i].on=t.checked;toast(t.checked?L('策略已启用','Rule on'):L('策略已停用','Rule off'))}
+ if(t.dataset.act==='chan'){S[t.dataset.k]=t.checked;toast(t.checked?L('渠道已启用','Channel on'):L('渠道已关闭,网站不受影响','Channel off. The web app is unaffected.'))}});
 document.addEventListener('submit',e=>{if(e.target.id!=='newbot')return;e.preventDefault();readForm();const f=S.form;const name=f.name.trim();
  if(!name){toast(L('请先给 Bot 起个名字','Give the bot a name first'));return}
  if(S.bots.some(b=>b.n.toLowerCase()===name.toLowerCase())){toast(L('已有同名 Bot,请换一个名字','A bot with that name exists. Pick another.'));return}
  const id='b'+(uid++);const sch={none:[],hourly:['每小时运行一次','Runs hourly'],daily:['工作日 08:00 运行','Weekdays 08:00'],weekly:['每周一 07:00 运行','Mondays 07:00']}[f.sched];
- const role=TPL[f.tpl];S.bots.push({id,n:name,zh:role[0],en:role[1],d:[f.inst||role[0],f.inst||role[1]],mode:f.mode,pref:f.pref,pin:f.pin,st:'idle',vis:f.vis,sched:sch,tools:f.cu==='yes'?[...f.tools,'Browser (UI)']:f.tools,cu:f.cu==='yes',cost:0,appr:'L2',mem:[],skills:[]});
+ const shift={none:[],hourly:Array.from({length:24},(_,h)=>[h,h+.2]),daily:[[8,8.6]],weekly:[[7,7.8]]}[f.sched];
+ const role=TPL[f.tpl];S.bots.push({id,sw:S.bots.length%6+1,code:'PE·'+name.slice(0,3).toUpperCase()+'·'+String(S.bots.length+1).padStart(2,'0'),n:name,zh:role[0],en:role[1],d:[f.inst||role[0],f.inst||role[1]],mode:f.mode,pref:f.pref,pin:f.pin,st:'idle',vis:f.vis,sched:sch,shift,tools:f.cu==='yes'?[...f.tools,'Browser (UI)']:f.tools,cu:f.cu==='yes',cost:0,appr:'L2',mem:[],skills:[]});
  S.form=null;S.audit.unshift([now(),name,'bot.created','L1','ok']);go('bot',{bot:id,tab:'overview'});toast(L(`${name} 已创建,正在待命`,`${name} is created and on call`))});
 document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(!t||t.tagName==='INPUT')return;const a=t.dataset.act,id=t.dataset.id;
- if(a==='nav')go(id);
- else if(a==='thread')go('threads',{thread:id});
- else if(a==='open-bot')go('bot',{bot:id,tab:'overview'});
+ const sc=document.getElementById('scroll');render.keepTop=sc?sc.scrollTop:null;
+ if(a==='nav'){render.keepTop=null;go(id)}
+ else if(a==='thread'){render.keepTop=null;go('threads',{thread:id})}
+ else if(a==='open-bot'){render.keepTop=null;go('bot',{bot:id,tab:'overview'})}
  else if(a==='tab'){S.tab=id;render()}
+ else if(a==='rcpt'){S.open[id]=!S.open[id];render();const d=document.querySelector(`[data-act="rcpt"][data-id="${id}"] + .dec`);if(d)d.scrollIntoView({block:'nearest'})}
  else if(a==='lang'){S.lang=S.lang==='zh'?'en':'zh';try{localStorage.setItem('peibot-lang',S.lang)}catch(x){}render()}
  else if(a==='send')send();
+ else if(a==='ask')ask();
+ else if(a==='engine'){S.engine=id;render()}
  else if(a==='mention'){const b=bot(id);S.draft=(S.draft?S.draft.replace(/\s*$/,' '):'')+'@'+b.n+' ';render();const c=document.getElementById('composer');c.focus();c.setSelectionRange(c.value.length,c.value.length)}
  else if(a==='approve'||a==='reject')decide(id,a==='approve');
- else if(a==='new-bot'){S.form={tpl:0,name:'',inst:'',mode:'auto',pref:'balanced',pin:'flash',tools:['Mail','Calendar'],cu:'no',sched:'none',vis:'private'};go('create')}
+ else if(a==='new-bot'){render.keepTop=null;S.form={tpl:0,name:'',inst:'',mode:'auto',pref:'balanced',pin:'flash',tools:['Gmail','Calendar'],cu:'no',sched:'none',vis:'private'};go('create')}
  else if(a==='set'){readForm();S.form[t.dataset.k]=t.dataset.v;render()}
  else if(a==='tpl'){readForm();const i=+t.dataset.i;S.form.tpl=i;S.form.inst=L(TPL[i][2],TPL[i][3]);if(i===4)S.form.cu='yes';render()}
  else if(a==='tool'){readForm();const v=t.dataset.v,T=S.form.tools;T.includes(v)?T.splice(T.indexOf(v),1):T.push(v);render()}
  else if(a==='cycle-model'){const b=bot(id),o=['quality','balanced','cost'];if(b.mode==='pinned'){b.mode='auto';b.pref='balanced'}else if(b.pref==='cost'){b.mode='pinned';b.pin=b.cu?'cu':'pro'}else b.pref=o[o.indexOf(b.pref)+1];toast(L('模型策略:','Model policy: ')+policyText(b))}
- else if(a==='start-thread'){const b=bot(id);S.draft='@'+b.n+' ';go('threads')}
+ else if(a==='start-thread'){render.keepTop=null;const b=bot(id);S.draft='@'+b.n+' ';go('threads')}
  else if(a==='pause'){const b=bot(id);b.st='idle';toast(L(`${b.n} 已暂停,定时任务不再触发`,`${b.n} is paused. Its schedules will not fire.`))}
  else if(a==='enable-cu'){const b=bot(id);b.cu=true;b.tools.push('Browser (UI)');toast(L('已开通云电脑,首次使用时创建沙箱','Computer enabled. The sandbox is created on first use.'))}
  else if(a==='forget'){bot(S.bot).mem.splice(+t.dataset.i,1);toast(L('已忘记这条记忆','Memory forgotten'))}
@@ -325,8 +451,8 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-act]');if(
  else if(a==='grant'){const d=S.dir.find(x=>x.id===id);d.granted=!d.granted;toast(d.granted?L(`Atlas 现在可以调用 ${d.n}`,`Atlas can now call ${d.n}`):L('已撤销授权','Access revoked'))}
  else if(a==='toast')toast(t.dataset.msg);
 });
-function fromHash(){const h=location.hash.slice(1);if(NAV.some(n=>n[0]===h)&&h!==S.view){S.view=h;render()}}
-window.addEventListener('hashchange',fromHash);
+setInterval(()=>{const h=document.getElementById('hand'),c=document.getElementById('dial-time');if(!h||!c)return;const d=new Date();h.setAttribute('transform',`rotate(${((d.getHours()+d.getMinutes()/60)/24*360).toFixed(2)} 200 200)`);c.textContent=hhmm(d)},20000);
+window.addEventListener('hashchange',()=>{const h=location.hash.slice(1);if(NAV.some(n=>n[0]===h)&&h!==S.view){S.view=h;render()}});
 const h0=location.hash.slice(1);if(NAV.some(n=>n[0]===h0))S.view=h0;
 render();
 })();
