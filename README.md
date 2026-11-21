@@ -2,7 +2,7 @@
 
 Perry Ellis International 内部的企业级 Agent 平台:员工创建 24x7 运行的 Bot,Bot 之间可以互相调用,模型由 Gemini Decision 1 逐次自动选择,也可强制指定。网站可独立运作,Google Chat 和 Gmail 是可选入口。
 
-当前阶段:技术设计。底座以北京团队的"PEI 全栈插件化应用平台"为主干(.NET、Cloud Run、插件化)。
+当前阶段:技术设计。第一版只做底座空壳,Bot 功能以后作为插件加入。底座以北京团队的"PEI 全栈插件化应用平台"为主干(.NET、Cloud Run、插件化)。
 
 ## 内容
 
