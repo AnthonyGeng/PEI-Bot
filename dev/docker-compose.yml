@@ -1,0 +1,19 @@
+# 本地开发依赖。PostgreSQL 的大版本必须与 Cloud SQL 实例一致(见 docs/design/08-environments.md)。
+# 不用 Docker 的同事可以自己安装同版本的 PostgreSQL,再执行 postgres/00-bootstrap.sql。
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_PASSWORD: local-dev-only
+      TZ: UTC
+      PGTZ: UTC
+    command: ["postgres", "-c", "timezone=UTC", "-c", "log_timezone=UTC"]
+    ports: ["5432:5432"]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres/00-bootstrap.sql:/docker-entrypoint-initdb.d/00-bootstrap.sql:ro
+  redis:
+    image: redis:7
+    ports: ["6379:6379"]
+volumes:
+  pgdata:

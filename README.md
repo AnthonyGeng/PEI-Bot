@@ -9,6 +9,7 @@ Perry Ellis International 内部的企业级 Agent 平台:员工创建 24x7 运�
 | 路径 | 说明 |
 | --- | --- |
 | `docs/design/` | 技术设计与已确认的决定 |
+| `dev/` | 本地开发依赖:PostgreSQL 与 Redis 的 Compose 文件和数据库初始化脚本 |
 | `contracts/` | 插件清单 JSON Schema、后端契约 `PEI.Platform.Abstractions`(.NET 10)、前端 `@pei/sdk` 类型,以及示例插件 |
 | `prototype/index.html` | 可交互原型。单文件、无后端,Bot 回复为模拟,数字为示例数据。左下角可切换中英文。 |
 
