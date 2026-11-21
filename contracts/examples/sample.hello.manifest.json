@@ -1,0 +1,36 @@
+{
+  "manifestVersion": 1,
+  "id": "sample.hello",
+  "version": "1.0.0",
+  "displayName": { "zh": "示例:问候", "en": "Sample: Hello" },
+  "description": { "zh": "第一版用来验证底座的示例插件,不对员工开放。", "en": "Sample plugin for validating the v1 platform. Not for employees." },
+  "owner": "北京开发团队",
+  "sdk": "[1.0,2.0)",
+  "poolHint": "experimental",
+  "permissions": [
+    { "id": "hello.read", "label": { "zh": "查看问候", "en": "View greetings" } },
+    { "id": "hello.write", "label": { "zh": "创建问候", "en": "Create greetings" } }
+  ],
+  "backend": {
+    "assembly": "backend/Pei.Sample.Hello.dll",
+    "entryType": "Pei.Sample.Hello.HelloPlugin",
+    "routePrefix": "/api/sample/hello"
+  },
+  "frontend": {
+    "entry": "frontend/index.js",
+    "slots": [
+      { "slot": "nav.page", "export": "GreetingsPage", "route": "/hello", "label": { "zh": "问候", "en": "Greetings" }, "icon": "smile", "group": "samples", "order": 900, "permission": "hello.read" },
+      { "slot": "home.widget", "export": "LatestGreetingWidget", "label": { "zh": "最新问候", "en": "Latest greeting" }, "size": "m", "permission": "hello.read" },
+      { "slot": "command", "export": "createGreeting", "label": { "zh": "新建问候", "en": "New greeting" }, "keywords": ["hello", "问候"], "permission": "hello.write" }
+    ]
+  },
+  "database": { "schema": "sample_hello" },
+  "schedules": [
+    { "id": "daily_digest", "cron": "0 0 * * *", "endpoint": "POST /jobs/daily-digest" }
+  ],
+  "events": {
+    "publishes": ["sample.hello/greeting_created.v1"],
+    "subscribes": [{ "topic": "core.masterdata/style_updated.v1", "endpoint": "POST /events/style-updated" }]
+  },
+  "limits": { "dbConnections": 2 }
+}

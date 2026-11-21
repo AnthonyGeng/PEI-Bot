@@ -34,7 +34,7 @@
 "extensionPoints": [
   { "name": "style.detail.tab", "version": 1, "kind": "tab",
     "description": { "zh": "款号详情页的标签页", "en": "Tab on the style detail page" },
-    "props": "frontend/extension-points/style-detail-tab.v1.json" }
+    "params": "frontend/extension-points/style-detail-tab.v1.json" }
 ]
 ```
 
@@ -43,7 +43,7 @@
 | `name` | 扩展点名,在插件内唯一 |
 | `version` | 主版本。传给挂载组件的参数一旦变化,必须新开主版本;旧版本至少保留一个大版本周期 |
 | `kind` | `tab` 标签页、`panel` 区块、`action` 按钮或菜单项、`card` 卡片。决定外壳给它多大空间、怎么排列 |
-| `props` | 传入参数的 JSON Schema 文件。SDK 据此为挂载方生成 TypeScript 类型 |
+| `params` | 传入参数的 JSON Schema 文件。SDK 据此为挂载方生成 TypeScript 类型 |
 | `matchBy` | 挂载方可在 `match` 中使用的字段,如 `tool.result` 按工具名匹配 |
 
 **挂载不需要 `dependsOn`。** 提供扩展点的插件不存在或被关闭时,挂载的内容不显示,其他功能照常。比如工艺单插件给 Bot 线程挂了一张结果卡片,而某个租户关闭了 Bot,工艺单插件仍然正常工作。提供方存在时,上传和加载都会检查主版本是否匹配。
@@ -62,12 +62,11 @@
 
 ## 每个挂载组件拿到什么
 
-外壳给每个挂载的组件传入两样东西:
+外壳给每个挂载的组件传入两样东西,类型定义见 [02 内核契约](02-kernel-contracts.md):
 
 - **`ctx`(所有插槽相同)**:当前用户、租户、界面语言、用户时区、权限检查函数、功能开关,以及读取上下文的方法。品牌这类业务上下文由提供它的插件发布,其他插件按键名读取,例如 `ctx.context.get("core.brandscope/current@1")`。外壳本身不知道“品牌”是什么。
-- **`props`(按插槽不同)**:路由参数、搜索词,或扩展点 `props` 文件定义的参数。
+- **`params`(按插槽不同)**:路由参数、卡片尺寸,或扩展点 `params` 文件定义的参数。
 
-具体类型在 02 号文档的 `@pei/sdk` 中定义。
 
 ## 加载与出错
 

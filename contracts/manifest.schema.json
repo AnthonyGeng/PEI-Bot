@@ -157,9 +157,9 @@
                 "$ref": "#/$defs/slotRef"
               },
               "export": {
-                "description": "入口模块中导出的组件名。search.provider 可省略,此时由外壳用标准样式渲染结果",
+                "description": "入口模块中的导出名:组件,或 command 的命令函数。search.provider 可省略,此时由外壳用标准样式渲染结果",
                 "type": "string",
-                "pattern": "^[A-Z][A-Za-z0-9]*$"
+                "pattern": "^[A-Za-z_$][A-Za-z0-9_$]*$"
               },
               "route": {
                 "description": "页面路由,可含参数,如 /techpack/:styleNo。settings.page 的路由挂在 /settings 下",
@@ -409,17 +409,17 @@
               "description": {
                 "$ref": "#/$defs/i18n"
               },
-              "props": {
-                "description": "传给挂载组件的参数说明(JSON Schema 文件,包内路径)",
-                "type": "string",
-                "pattern": "^frontend/.+\\.json$"
-              },
               "matchBy": {
                 "description": "挂载方可在 match 中使用的字段",
                 "type": "array",
                 "items": {
                   "type": "string"
                 }
+              },
+              "params": {
+                "description": "传给挂载组件的 params 说明(JSON Schema 文件,包内路径)",
+                "type": "string",
+                "pattern": "^frontend/.+\\.json$"
               }
             }
           }
@@ -457,6 +457,21 @@
             "type": "string",
             "pattern": "^[a-z][a-z0-9_]+\\.v_[a-z0-9_]+_v[0-9]+$"
           }
+        }
+      }
+    },
+    "contexts": {
+      "description": "本插件发布给其他插件读取的上下文值,如当前品牌。名称写作 名称@主版本,全局键为 插件id/名称@主版本。后端须注册对应的 IContextValueProvider。",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "provides": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*@[1-9][0-9]*$"
+          },
+          "uniqueItems": true
         }
       }
     },

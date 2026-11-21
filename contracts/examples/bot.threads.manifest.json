@@ -29,7 +29,7 @@
         "version": 1,
         "kind": "card",
         "description": { "zh": "在线程里渲染某个工具的调用结果。未挂载时以通用卡片显示。", "en": "Renders a tool result in a thread. Falls back to a generic card when nothing is mounted." },
-        "props": "frontend/extension-points/tool-result.v1.json",
+        "params": "frontend/extension-points/tool-result.v1.json",
         "matchBy": ["tool"]
       },
       {
@@ -37,7 +37,7 @@
         "version": 1,
         "kind": "action",
         "description": { "zh": "Bot 消息上的操作菜单项,例如“在工艺单中打开”。", "en": "Action menu item on a bot message, such as Open in Tech Pack." },
-        "props": "frontend/extension-points/message-action.v1.json"
+        "params": "frontend/extension-points/message-action.v1.json"
       }
     ]
   },
