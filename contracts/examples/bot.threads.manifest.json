@@ -1,0 +1,35 @@
+{
+  "manifestVersion": 1,
+  "id": "bot.threads",
+  "version": "0.1.0",
+  "displayName": { "zh": "线程", "en": "Threads" },
+  "owner": "北京开发团队",
+  "sdk": ">=1.0 <2.0",
+  "requiresFeatures": ["bot"],
+  "poolHint": "experimental",
+  "permissions": [
+    { "id": "thread.use", "label": { "zh": "使用线程与 Bot 对话", "en": "Use threads with bots" } }
+  ],
+  "backend": {
+    "assembly": "backend/Pei.Bot.Threads.dll",
+    "entryType": "Pei.Bot.Threads.ThreadsPlugin",
+    "openApi": "backend/openapi.json"
+  },
+  "frontend": {
+    "entry": "frontend/index.js",
+    "slots": [
+      { "slot": "nav.page", "export": "ThreadsPage", "route": "/threads", "label": { "zh": "线程", "en": "Threads" }, "order": 20, "permission": "thread.use" }
+    ]
+  },
+  "database": { "schema": "bot_threads" },
+  "tools": [
+    {
+      "name": "thread.post",
+      "description": { "zh": "在当前线程里发一条消息,可 @ 其他 Bot 转交工作。", "en": "Post a message in the current thread; may mention other bots to hand off work." },
+      "risk": "L1",
+      "endpoint": "POST /threads/{threadId}/messages",
+      "permission": "thread.use"
+    }
+  ],
+  "events": { "publishes": ["bot.threads/message_posted.v1"] }
+}

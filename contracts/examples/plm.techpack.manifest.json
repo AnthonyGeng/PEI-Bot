@@ -1,0 +1,60 @@
+{
+  "manifestVersion": 1,
+  "id": "plm.techpack",
+  "version": "0.3.0",
+  "displayName": { "zh": "工艺单", "en": "Tech Pack" },
+  "owner": "北京开发团队",
+  "sdk": ">=1.0 <2.0",
+  "dependsOn": [
+    { "id": "core.brandscope", "version": ">=1.0" },
+    { "id": "core.masterdata", "version": ">=1.2" }
+  ],
+  "poolHint": "core",
+  "permissions": [
+    { "id": "techpack.read", "label": { "zh": "查看工艺单", "en": "View tech packs" } },
+    { "id": "techpack.edit", "label": { "zh": "编辑工艺单", "en": "Edit tech packs" } },
+    { "id": "techpack.submit", "label": { "zh": "提交工艺单审核", "en": "Submit tech packs for review" } }
+  ],
+  "backend": {
+    "assembly": "backend/Pei.Plm.TechPack.dll",
+    "entryType": "Pei.Plm.TechPack.TechPackPlugin",
+    "routePrefix": "/api/plm/techpack",
+    "openApi": "backend/openapi.json"
+  },
+  "frontend": {
+    "entry": "frontend/index.js",
+    "styles": ["frontend/index.css"],
+    "slots": [
+      { "slot": "nav.page", "export": "TechPackPage", "route": "/techpack", "label": { "zh": "工艺单", "en": "Tech Packs" }, "order": 300, "permission": "techpack.read" }
+    ]
+  },
+  "database": {
+    "schema": "plm_techpack",
+    "exposes": ["v_techpack_summary_v1"],
+    "reads": ["core_masterdata.v_style_v1", "core_masterdata.v_fabric_v1"]
+  },
+  "tools": [
+    {
+      "name": "techpack.get",
+      "description": { "zh": "按款号读取工艺单,含尺码表、面料和工艺说明。只读。", "en": "Read a tech pack by style number, including size spec, fabrics and construction notes. Read-only." },
+      "risk": "L0",
+      "endpoint": "GET /techpacks/{styleNo}",
+      "permission": "techpack.read"
+    },
+    {
+      "name": "techpack.submit_for_review",
+      "description": { "zh": "把一份草稿工艺单提交给技术部审核。提交后需技术部退回才能再改。", "en": "Submit a draft tech pack to the technical team for review. It cannot be edited again until returned." },
+      "risk": "L2",
+      "endpoint": "POST /techpacks/{styleNo}/submit",
+      "permission": "techpack.submit"
+    }
+  ],
+  "schedules": [
+    { "id": "overdue_reminders", "cron": "0 8 * * 1-5", "timeZone": "Asia/Shanghai", "endpoint": "POST /jobs/overdue-reminders" }
+  ],
+  "events": {
+    "publishes": ["plm.techpack/submitted.v1"],
+    "subscribes": [{ "topic": "core.masterdata/style_updated.v1", "endpoint": "POST /events/style-updated" }]
+  },
+  "limits": { "dbConnections": 8, "requestTimeoutSeconds": 30 }
+}

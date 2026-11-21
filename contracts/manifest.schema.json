@@ -1,0 +1,201 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://pei.example/contracts/manifest/v1.json",
+  "title": "PEI 插件清单 v1",
+  "description": "全栈插件包根目录下的 manifest.json。内核在上传时用本 Schema 校验,校验不过的包不会生成版本。规则:只增不改。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["manifestVersion", "id", "version", "displayName", "sdk"],
+  "properties": {
+    "manifestVersion": { "const": 1 },
+    "id": {
+      "description": "全局唯一的插件 ID,小写,点分。一经发布不可更改。",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9]*(\\.[a-z][a-z0-9_]*){1,3}$"
+    },
+    "version": { "$ref": "#/$defs/semver" },
+    "displayName": { "$ref": "#/$defs/i18n" },
+    "description": { "$ref": "#/$defs/i18n" },
+    "owner": { "description": "负责维护的团队", "type": "string", "minLength": 1 },
+    "sdk": {
+      "description": "兼容的契约版本范围,同时约束 PEI.Platform.Abstractions 与 @pei/sdk,例如 \">=1.0 <2.0\"",
+      "type": "string",
+      "minLength": 1
+    },
+    "dependsOn": {
+      "description": "前置插件。只用于安装顺序和版本校验,插件之间仍禁止直接代码引用。",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "version"],
+        "properties": {
+          "id": { "type": "string" },
+          "version": { "description": "版本范围", "type": "string" }
+        }
+      }
+    },
+    "requiresFeatures": {
+      "description": "依赖的内核功能开关。任一开关对当前租户或用户组关闭时,该插件的界面、接口和工具对其整体不可见。Bot 相关插件必须声明 \"bot\"。",
+      "type": "array",
+      "items": { "enum": ["bot"] },
+      "uniqueItems": true
+    },
+    "poolHint": {
+      "description": "建议的宿主池。最终由 Admin 分配。",
+      "enum": ["core", "trade", "experimental"]
+    },
+    "permissions": {
+      "description": "本插件定义的权限点。用户和 Bot 共用同一套权限点。",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "label"],
+        "properties": {
+          "id": { "$ref": "#/$defs/localName" },
+          "label": { "$ref": "#/$defs/i18n" }
+        }
+      }
+    },
+    "backend": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["assembly", "entryType"],
+      "properties": {
+        "assembly": { "description": "包内相对路径", "type": "string", "pattern": "^backend/[^/]+\\.dll$" },
+        "entryType": { "description": "实现 IPlugin 的类型全名", "type": "string" },
+        "routePrefix": { "description": "缺省为 /api/{id 中的点换成斜杠}", "type": "string", "pattern": "^/api/" },
+        "openApi": { "description": "接口定义,工具的参数结构由此生成", "type": "string", "pattern": "^backend/.+\\.json$" }
+      }
+    },
+    "frontend": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["entry"],
+      "properties": {
+        "entry": { "type": "string", "pattern": "^frontend/.+\\.js$" },
+        "styles": { "type": "array", "items": { "type": "string", "pattern": "^frontend/.+\\.css$" } },
+        "slots": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["slot", "export"],
+            "properties": {
+              "slot": { "description": "外壳提供的插槽", "enum": ["nav.page", "thread.card", "bot.tab", "admin.page", "home.widget"] },
+              "export": { "description": "入口模块中导出的组件名", "type": "string" },
+              "route": { "type": "string", "pattern": "^/" },
+              "label": { "$ref": "#/$defs/i18n" },
+              "order": { "description": "菜单排序权重,越小越靠前", "type": "integer" },
+              "permission": { "description": "可见所需的权限点,可引用其他插件的权限点(id:权限)", "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    "database": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema"],
+      "properties": {
+        "schema": { "type": "string", "pattern": "^[a-z][a-z0-9_]{1,40}$" },
+        "migrations": { "description": "幂等、只增不改的迁移脚本目录", "type": "string", "default": "migrations/" },
+        "exposes": {
+          "description": "对其他插件开放的只读视图,名称必须带版本后缀",
+          "type": "array",
+          "items": { "type": "string", "pattern": "^v_[a-z0-9_]+_v[0-9]+$" }
+        },
+        "reads": {
+          "description": "要读取的其他插件视图,写作 schema.视图名;发布时自动授权",
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[a-z][a-z0-9_]+\\.v_[a-z0-9_]+_v[0-9]+$" }
+        }
+      }
+    },
+    "tools": {
+      "description": "暴露给 Bot 的工具。参数结构从 backend.openApi 中对应接口生成。",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "description", "risk", "endpoint", "permission"],
+        "properties": {
+          "name": { "description": "在插件内唯一;全局名为 {插件 id}/{name}", "$ref": "#/$defs/localName" },
+          "description": { "description": "写给模型看的说明:做什么、何时用、何时不用", "$ref": "#/$defs/i18n" },
+          "risk": {
+            "description": "L0 只读;L1 可撤销的内部写入;L2 对外或难撤销;L3 付款、删除、改权限。运行时只能调高,不能调低。",
+            "enum": ["L0", "L1", "L2", "L3"]
+          },
+          "endpoint": { "type": "string", "pattern": "^(GET|POST|PUT|PATCH|DELETE) /" },
+          "permission": { "description": "调用所需的权限点", "type": "string" },
+          "externalAllowed": { "description": "是否可提供给外部租户的 Bot。默认否。", "type": "boolean", "default": false }
+        }
+      }
+    },
+    "schedules": {
+      "description": "定时任务,由内核调度服务回调,禁止插件自建后台线程",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "cron", "endpoint"],
+        "properties": {
+          "id": { "$ref": "#/$defs/localName" },
+          "cron": { "type": "string" },
+          "timeZone": { "type": "string", "default": "America/New_York" },
+          "endpoint": { "type": "string", "pattern": "^POST /" },
+          "timeoutSeconds": { "type": "integer", "minimum": 1, "maximum": 3600, "default": 300 }
+        }
+      }
+    },
+    "events": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "publishes": { "type": "array", "items": { "$ref": "#/$defs/topic" } },
+        "subscribes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["topic", "endpoint"],
+            "properties": {
+              "topic": { "$ref": "#/$defs/topic" },
+              "endpoint": { "type": "string", "pattern": "^POST /" }
+            }
+          }
+        }
+      }
+    },
+    "egress": {
+      "description": "出站网络。未声明的目标一律拒绝。",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "internalNetwork": { "description": "需要经 HA VPN 访问机房内网;只能被分配到开放内网出口的池", "type": "boolean", "default": false },
+        "hosts": { "type": "array", "items": { "type": "string", "pattern": "^[a-z0-9.-]+$" } }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "dbConnections": { "type": "integer", "minimum": 1, "maximum": 50, "default": 5 },
+        "requestTimeoutSeconds": { "type": "integer", "minimum": 1, "maximum": 300, "default": 30 },
+        "maxConcurrentRequests": { "type": "integer", "minimum": 1, "default": 100 }
+      }
+    }
+  },
+  "$defs": {
+    "semver": { "type": "string", "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?$" },
+    "localName": { "type": "string", "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*$" },
+    "topic": { "description": "{插件 id}/{事件名}.v{版本}", "type": "string", "pattern": "^[a-z][a-z0-9_.]+/[a-z][a-z0-9_.]*\\.v[0-9]+$" },
+    "i18n": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["zh", "en"],
+      "properties": { "zh": { "type": "string", "minLength": 1 }, "en": { "type": "string", "minLength": 1 } }
+    }
+  }
+}
