@@ -18,13 +18,16 @@
 | 入口 | 网站独立运作;Google Chat、Gmail 为可选渠道,第二阶段再做 | 第 4.4 节 |
 | 外部用户 | B2B 客户和大陆供应链用户暂不使用 Bot,由 `bot` 功能开关控制 | 第 14.9 节 |
 | 范围 | 暂缓电脑操作和录屏教学;先到 30–50 人试点 | 第 13 节 |
+| 版本范围 | 清单中的版本范围统一用 NuGet 写法,如 `[1.0,2.0)` | 01 号文档 |
+| 时间 | 存储、传输、cron 一律 UTC;界面按用户时区显示;跟随当地钟点的任务可另填时区 | 01 号文档 |
 | 实施顺序 | 先用 PEI Bot 插件验证底座,再迁主数据和 PLM,WebOrder 最后 | 第 14.7 节 |
 
 ## 设计文档
 
 | 编号 | 主题 | 状态 |
 | --- | --- | --- |
-| 01 | [插件清单](01-plugin-manifest.md) · [Schema](../../contracts/manifest.schema.json) | 草案 v0.1 |
+| 01 | [插件清单](01-plugin-manifest.md) · [Schema](../../contracts/manifest.schema.json) | 草案 v0.2 |
+| 01a | [界面插槽与扩展点](01a-ui-slots.md) | 草案 v0.1 |
 | 02 | 内核契约:`PEI.Platform.Abstractions` 与 `@pei/sdk` | 未开始 |
 | 03 | 宿主池、隔离与资源配额 | 未开始 |
 | 04 | 身份与权限:用户、Bot、委托、调用链、功能开关 | 未开始 |

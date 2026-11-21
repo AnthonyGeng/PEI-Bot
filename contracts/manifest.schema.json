@@ -5,22 +5,39 @@
   "description": "全栈插件包根目录下的 manifest.json。内核在上传时用本 Schema 校验,校验不过的包不会生成版本。规则:只增不改。",
   "type": "object",
   "additionalProperties": false,
-  "required": ["manifestVersion", "id", "version", "displayName", "sdk"],
+  "required": [
+    "manifestVersion",
+    "id",
+    "version",
+    "displayName",
+    "sdk"
+  ],
   "properties": {
-    "manifestVersion": { "const": 1 },
+    "manifestVersion": {
+      "const": 1
+    },
     "id": {
       "description": "全局唯一的插件 ID,小写,点分。一经发布不可更改。",
       "type": "string",
       "pattern": "^[a-z][a-z0-9]*(\\.[a-z][a-z0-9_]*){1,3}$"
     },
-    "version": { "$ref": "#/$defs/semver" },
-    "displayName": { "$ref": "#/$defs/i18n" },
-    "description": { "$ref": "#/$defs/i18n" },
-    "owner": { "description": "负责维护的团队", "type": "string", "minLength": 1 },
-    "sdk": {
-      "description": "兼容的契约版本范围,同时约束 PEI.Platform.Abstractions 与 @pei/sdk,例如 \">=1.0 <2.0\"",
+    "version": {
+      "$ref": "#/$defs/semver"
+    },
+    "displayName": {
+      "$ref": "#/$defs/i18n"
+    },
+    "description": {
+      "$ref": "#/$defs/i18n"
+    },
+    "owner": {
+      "description": "负责维护的团队",
       "type": "string",
       "minLength": 1
+    },
+    "sdk": {
+      "description": "兼容的契约版本范围,同时约束 PEI.Platform.Abstractions 与 @pei/sdk。建议写成 [当前主版本,下一主版本),例如 [1.0,2.0)。",
+      "$ref": "#/$defs/versionRange"
     },
     "dependsOn": {
       "description": "前置插件。只用于安装顺序和版本校验,插件之间仍禁止直接代码引用。",
@@ -28,22 +45,37 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id", "version"],
+        "required": [
+          "id",
+          "version"
+        ],
         "properties": {
-          "id": { "type": "string" },
-          "version": { "description": "版本范围", "type": "string" }
+          "id": {
+            "type": "string"
+          },
+          "version": {
+            "$ref": "#/$defs/versionRange"
+          }
         }
       }
     },
     "requiresFeatures": {
       "description": "依赖的内核功能开关。任一开关对当前租户或用户组关闭时,该插件的界面、接口和工具对其整体不可见。Bot 相关插件必须声明 \"bot\"。",
       "type": "array",
-      "items": { "enum": ["bot"] },
+      "items": {
+        "enum": [
+          "bot"
+        ]
+      },
       "uniqueItems": true
     },
     "poolHint": {
       "description": "建议的宿主池。最终由 Admin 分配。",
-      "enum": ["core", "trade", "experimental"]
+      "enum": [
+        "core",
+        "trade",
+        "experimental"
+      ]
     },
     "permissions": {
       "description": "本插件定义的权限点。用户和 Bot 共用同一套权限点。",
@@ -51,44 +83,344 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id", "label"],
+        "required": [
+          "id",
+          "label"
+        ],
         "properties": {
-          "id": { "$ref": "#/$defs/localName" },
-          "label": { "$ref": "#/$defs/i18n" }
+          "id": {
+            "$ref": "#/$defs/localName"
+          },
+          "label": {
+            "$ref": "#/$defs/i18n"
+          }
         }
       }
     },
     "backend": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["assembly", "entryType"],
+      "required": [
+        "assembly",
+        "entryType"
+      ],
       "properties": {
-        "assembly": { "description": "包内相对路径", "type": "string", "pattern": "^backend/[^/]+\\.dll$" },
-        "entryType": { "description": "实现 IPlugin 的类型全名", "type": "string" },
-        "routePrefix": { "description": "缺省为 /api/{id 中的点换成斜杠}", "type": "string", "pattern": "^/api/" },
-        "openApi": { "description": "接口定义,工具的参数结构由此生成", "type": "string", "pattern": "^backend/.+\\.json$" }
+        "assembly": {
+          "description": "包内相对路径",
+          "type": "string",
+          "pattern": "^backend/[^/]+\\.dll$"
+        },
+        "entryType": {
+          "description": "实现 IPlugin 的类型全名",
+          "type": "string"
+        },
+        "routePrefix": {
+          "description": "缺省为 /api/{id 中的点换成斜杠}",
+          "type": "string",
+          "pattern": "^/api/"
+        },
+        "openApi": {
+          "description": "接口定义,工具的参数结构由此生成",
+          "type": "string",
+          "pattern": "^backend/.+\\.json$"
+        }
       }
     },
     "frontend": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["entry"],
+      "required": [
+        "entry"
+      ],
       "properties": {
-        "entry": { "type": "string", "pattern": "^frontend/.+\\.js$" },
-        "styles": { "type": "array", "items": { "type": "string", "pattern": "^frontend/.+\\.css$" } },
+        "entry": {
+          "type": "string",
+          "pattern": "^frontend/.+\\.js$"
+        },
+        "styles": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^frontend/.+\\.css$"
+          }
+        },
         "slots": {
           "type": "array",
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["slot", "export"],
+            "required": [
+              "slot"
+            ],
             "properties": {
-              "slot": { "description": "外壳提供的插槽", "enum": ["nav.page", "thread.card", "bot.tab", "admin.page", "home.widget"] },
-              "export": { "description": "入口模块中导出的组件名", "type": "string" },
-              "route": { "type": "string", "pattern": "^/" },
-              "label": { "$ref": "#/$defs/i18n" },
-              "order": { "description": "菜单排序权重,越小越靠前", "type": "integer" },
-              "permission": { "description": "可见所需的权限点,可引用其他插件的权限点(id:权限)", "type": "string" }
+              "slot": {
+                "$ref": "#/$defs/slotRef"
+              },
+              "export": {
+                "description": "入口模块中导出的组件名。search.provider 可省略,此时由外壳用标准样式渲染结果",
+                "type": "string",
+                "pattern": "^[A-Z][A-Za-z0-9]*$"
+              },
+              "route": {
+                "description": "页面路由,可含参数,如 /techpack/:styleNo。settings.page 的路由挂在 /settings 下",
+                "type": "string",
+                "pattern": "^(/([a-z0-9_-]+|:[a-z][A-Za-z0-9]*))+$|^/$"
+              },
+              "label": {
+                "$ref": "#/$defs/i18n"
+              },
+              "icon": {
+                "description": "@pei/sdk 图标集中的名称",
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9-]*$"
+              },
+              "group": {
+                "description": "导航分组 ID,分组由 Admin 配置;未知分组归入“其他”",
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_-]*$"
+              },
+              "order": {
+                "description": "排序权重,越小越靠前;Admin 可按租户覆盖",
+                "type": "integer"
+              },
+              "size": {
+                "description": "home.widget 的宽度",
+                "enum": [
+                  "s",
+                  "m",
+                  "l"
+                ]
+              },
+              "keywords": {
+                "description": "command 的检索词",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "endpoint": {
+                "description": "search.provider 的搜索接口",
+                "type": "string",
+                "pattern": "^GET /"
+              },
+              "match": {
+                "description": "扩展点的匹配条件,由提供方定义,例如 tool.result 的 {\"tool\": \"techpack.get\"}",
+                "type": "object"
+              },
+              "permission": {
+                "description": "可见所需的权限点;引用其他插件的权限点写作 插件id:权限点",
+                "type": "string"
+              }
+            },
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "slot": {
+                      "const": "nav.page"
+                    }
+                  }
+                },
+                "then": {
+                  "required": [
+                    "export",
+                    "route",
+                    "label"
+                  ]
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "slot": {
+                      "const": "route.page"
+                    }
+                  }
+                },
+                "then": {
+                  "required": [
+                    "export",
+                    "route"
+                  ]
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "slot": {
+                      "const": "home.widget"
+                    }
+                  }
+                },
+                "then": {
+                  "required": [
+                    "export",
+                    "label",
+                    "size"
+                  ]
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "slot": {
+                      "const": "header.action"
+                    }
+                  }
+                },
+                "then": {
+                  "required": [
+                    "export",
+                    "label",
+                    "icon"
+                  ]
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "slot": {
+                      "const": "command"
+                    }
+                  }
+                },
+                "then": {
+                  "required": [
+                    "label"
+                  ],
+                  "anyOf": [
+                    {
+                      "required": [
+                        "route"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "export"
+                      ]
+                    }
+                  ]
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "slot": {
+                      "const": "search.provider"
+                    }
+                  }
+                },
+                "then": {
+                  "required": [
+                    "label",
+                    "endpoint"
+                  ]
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "slot": {
+                      "const": "settings.page"
+                    }
+                  }
+                },
+                "then": {
+                  "required": [
+                    "export",
+                    "route",
+                    "label"
+                  ]
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "slot": {
+                      "const": "profile.section"
+                    }
+                  }
+                },
+                "then": {
+                  "required": [
+                    "export",
+                    "label"
+                  ]
+                }
+              },
+              {
+                "if": {
+                  "properties": {
+                    "slot": {
+                      "not": {
+                        "enum": [
+                          "nav.page",
+                          "route.page",
+                          "home.widget",
+                          "header.action",
+                          "command",
+                          "search.provider",
+                          "settings.page",
+                          "profile.section"
+                        ]
+                      }
+                    }
+                  }
+                },
+                "then": {
+                  "required": [
+                    "export"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        "extensionPoints": {
+          "description": "本插件提供、允许其他插件挂载内容的扩展点。发布后只增不改;改变传入参数必须新开主版本。",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "version",
+              "kind",
+              "description"
+            ],
+            "properties": {
+              "name": {
+                "$ref": "#/$defs/localName"
+              },
+              "version": {
+                "description": "主版本",
+                "type": "integer",
+                "minimum": 1
+              },
+              "kind": {
+                "description": "tab 标签页;panel 区块;action 按钮或菜单项;card 卡片",
+                "enum": [
+                  "tab",
+                  "panel",
+                  "action",
+                  "card"
+                ]
+              },
+              "description": {
+                "$ref": "#/$defs/i18n"
+              },
+              "props": {
+                "description": "传给挂载组件的参数说明(JSON Schema 文件,包内路径)",
+                "type": "string",
+                "pattern": "^frontend/.+\\.json$"
+              },
+              "matchBy": {
+                "description": "挂载方可在 match 中使用的字段",
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
             }
           }
         }
@@ -97,19 +429,34 @@
     "database": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["schema"],
+      "required": [
+        "schema"
+      ],
       "properties": {
-        "schema": { "type": "string", "pattern": "^[a-z][a-z0-9_]{1,40}$" },
-        "migrations": { "description": "幂等、只增不改的迁移脚本目录", "type": "string", "default": "migrations/" },
+        "schema": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{1,40}$"
+        },
+        "migrations": {
+          "description": "幂等、只增不改的迁移脚本目录",
+          "type": "string",
+          "default": "migrations/"
+        },
         "exposes": {
           "description": "对其他插件开放的只读视图,名称必须带版本后缀",
           "type": "array",
-          "items": { "type": "string", "pattern": "^v_[a-z0-9_]+_v[0-9]+$" }
+          "items": {
+            "type": "string",
+            "pattern": "^v_[a-z0-9_]+_v[0-9]+$"
+          }
         },
         "reads": {
           "description": "要读取的其他插件视图,写作 schema.视图名;发布时自动授权",
           "type": "array",
-          "items": { "type": "string", "pattern": "^[a-z][a-z0-9_]+\\.v_[a-z0-9_]+_v[0-9]+$" }
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]+\\.v_[a-z0-9_]+_v[0-9]+$"
+          }
         }
       }
     },
@@ -119,33 +466,106 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["name", "description", "risk", "endpoint", "permission"],
+        "required": [
+          "name",
+          "description",
+          "risk",
+          "endpoint",
+          "permission"
+        ],
         "properties": {
-          "name": { "description": "在插件内唯一;全局名为 {插件 id}/{name}", "$ref": "#/$defs/localName" },
-          "description": { "description": "写给模型看的说明:做什么、何时用、何时不用", "$ref": "#/$defs/i18n" },
+          "name": {
+            "description": "在插件内唯一;全局名为 {插件 id}/{name}",
+            "$ref": "#/$defs/localName"
+          },
+          "description": {
+            "description": "写给模型看的说明:做什么、何时用、何时不用",
+            "$ref": "#/$defs/i18n"
+          },
           "risk": {
             "description": "L0 只读;L1 可撤销的内部写入;L2 对外或难撤销;L3 付款、删除、改权限。运行时只能调高,不能调低。",
-            "enum": ["L0", "L1", "L2", "L3"]
+            "enum": [
+              "L0",
+              "L1",
+              "L2",
+              "L3"
+            ]
           },
-          "endpoint": { "type": "string", "pattern": "^(GET|POST|PUT|PATCH|DELETE) /" },
-          "permission": { "description": "调用所需的权限点", "type": "string" },
-          "externalAllowed": { "description": "是否可提供给外部租户的 Bot。默认否。", "type": "boolean", "default": false }
-        }
+          "endpoint": {
+            "type": "string",
+            "pattern": "^(GET|POST|PUT|PATCH|DELETE) /"
+          },
+          "permission": {
+            "description": "调用所需的权限点",
+            "type": "string"
+          },
+          "externalAllowed": {
+            "description": "是否可提供给外部租户的 Bot。默认否。",
+            "type": "boolean",
+            "default": false
+          },
+          "summary": {
+            "description": "审批卡片上的一句话,由内核渲染。可用 {参数名} 引用调用参数,例如“提交 {styleNo} 的工艺单审核”。L2、L3 工具必填。",
+            "$ref": "#/$defs/i18n"
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "risk": {
+                  "enum": [
+                    "L2",
+                    "L3"
+                  ]
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "summary"
+              ]
+            }
+          }
+        ]
       }
     },
     "schedules": {
-      "description": "定时任务,由内核调度服务回调,禁止插件自建后台线程",
+      "description": "定时任务,由内核调度服务回调,禁止插件自建后台线程。cron 一律按 UTC 解释。",
       "type": "array",
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["id", "cron", "endpoint"],
+        "required": [
+          "id",
+          "cron",
+          "endpoint"
+        ],
         "properties": {
-          "id": { "$ref": "#/$defs/localName" },
-          "cron": { "type": "string" },
-          "timeZone": { "type": "string", "default": "America/New_York" },
-          "endpoint": { "type": "string", "pattern": "^POST /" },
-          "timeoutSeconds": { "type": "integer", "minimum": 1, "maximum": 3600, "default": 300 }
+          "id": {
+            "$ref": "#/$defs/localName"
+          },
+          "cron": {
+            "description": "5 段 cron,按 UTC 解释。例如北京时间工作日 08:00 写作 0 0 * * 1-5。",
+            "type": "string",
+            "pattern": "^\\S+( \\S+){4}$"
+          },
+          "timeZone": {
+            "description": "仅当任务必须跟随某地的当地时间、且该地有夏令时(如每天纽约时间 9 点)时才填写 IANA 时区名;此时 cron 按该时区解释。缺省为 UTC。",
+            "type": "string",
+            "default": "UTC",
+            "pattern": "^(UTC|[A-Za-z_]+(/[A-Za-z_+-]+)+)$"
+          },
+          "endpoint": {
+            "type": "string",
+            "pattern": "^POST /"
+          },
+          "timeoutSeconds": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3600,
+            "default": 300
+          }
         }
       }
     },
@@ -153,16 +573,29 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "publishes": { "type": "array", "items": { "$ref": "#/$defs/topic" } },
+        "publishes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/topic"
+          }
+        },
         "subscribes": {
           "type": "array",
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["topic", "endpoint"],
+            "required": [
+              "topic",
+              "endpoint"
+            ],
             "properties": {
-              "topic": { "$ref": "#/$defs/topic" },
-              "endpoint": { "type": "string", "pattern": "^POST /" }
+              "topic": {
+                "$ref": "#/$defs/topic"
+              },
+              "endpoint": {
+                "type": "string",
+                "pattern": "^POST /"
+              }
             }
           }
         }
@@ -173,29 +606,105 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "internalNetwork": { "description": "需要经 HA VPN 访问机房内网;只能被分配到开放内网出口的池", "type": "boolean", "default": false },
-        "hosts": { "type": "array", "items": { "type": "string", "pattern": "^[a-z0-9.-]+$" } }
+        "internalNetwork": {
+          "description": "需要经 HA VPN 访问机房内网;只能被分配到开放内网出口的池",
+          "type": "boolean",
+          "default": false
+        },
+        "hosts": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9.-]+$"
+          }
+        }
       }
     },
     "limits": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "dbConnections": { "type": "integer", "minimum": 1, "maximum": 50, "default": 5 },
-        "requestTimeoutSeconds": { "type": "integer", "minimum": 1, "maximum": 300, "default": 30 },
-        "maxConcurrentRequests": { "type": "integer", "minimum": 1, "default": 100 }
+        "dbConnections": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50,
+          "default": 5
+        },
+        "requestTimeoutSeconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 300,
+          "default": 30
+        },
+        "maxConcurrentRequests": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 100
+        }
       }
     }
   },
   "$defs": {
-    "semver": { "type": "string", "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?$" },
-    "localName": { "type": "string", "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*$" },
-    "topic": { "description": "{插件 id}/{事件名}.v{版本}", "type": "string", "pattern": "^[a-z][a-z0-9_.]+/[a-z][a-z0-9_.]*\\.v[0-9]+$" },
+    "semver": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?$"
+    },
+    "localName": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*$"
+    },
+    "topic": {
+      "description": "{插件 id}/{事件名}.v{版本}",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_.]+/[a-z][a-z0-9_.]*\\.v[0-9]+$"
+    },
     "i18n": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["zh", "en"],
-      "properties": { "zh": { "type": "string", "minLength": 1 }, "en": { "type": "string", "minLength": 1 } }
+      "required": [
+        "zh",
+        "en"
+      ],
+      "properties": {
+        "zh": {
+          "type": "string",
+          "minLength": 1
+        },
+        "en": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "nugetVersion": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)(\\.(0|[1-9][0-9]*)){0,3}(-[0-9A-Za-z.-]+)?$"
+    },
+    "versionRange": {
+      "description": "NuGet 版本范围写法:1.2 表示 ≥1.2;[1.0,2.0) 表示 ≥1.0 且 <2.0;[1.2.3] 表示恰好 1.2.3。不支持浮动版本(1.*)。",
+      "type": "string",
+      "pattern": "^((0|[1-9][0-9]*)(\\.(0|[1-9][0-9]*)){0,3}(-[0-9A-Za-z.-]+)?|\\[(0|[1-9][0-9]*)(\\.(0|[1-9][0-9]*)){0,3}(-[0-9A-Za-z.-]+)?\\]|[\\[(]((0|[1-9][0-9]*)(\\.(0|[1-9][0-9]*)){0,3}(-[0-9A-Za-z.-]+)?)?,((0|[1-9][0-9]*)(\\.(0|[1-9][0-9]*)){0,3}(-[0-9A-Za-z.-]+)?)?[\\])])$"
+    },
+    "slotRef": {
+      "description": "外壳插槽,或其他插件提供的扩展点(写作 插件id/扩展点名@主版本)",
+      "anyOf": [
+        {
+          "enum": [
+            "nav.page",
+            "route.page",
+            "home.widget",
+            "header.action",
+            "command",
+            "search.provider",
+            "settings.page",
+            "profile.section"
+          ]
+        },
+        {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9]*(\\.[a-z][a-z0-9_]*){1,3}/[a-z][a-z0-9_]*(\\.[a-z][a-z0-9_]*)*@[1-9][0-9]*$"
+        }
+      ]
     }
   }
 }

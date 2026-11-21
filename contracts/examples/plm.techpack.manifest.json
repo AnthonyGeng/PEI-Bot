@@ -4,16 +4,17 @@
   "version": "0.3.0",
   "displayName": { "zh": "工艺单", "en": "Tech Pack" },
   "owner": "北京开发团队",
-  "sdk": ">=1.0 <2.0",
+  "sdk": "[1.0,2.0)",
   "dependsOn": [
-    { "id": "core.brandscope", "version": ">=1.0" },
-    { "id": "core.masterdata", "version": ">=1.2" }
+    { "id": "core.brandscope", "version": "1.0" },
+    { "id": "core.masterdata", "version": "[1.2,2.0)" }
   ],
   "poolHint": "core",
   "permissions": [
     { "id": "techpack.read", "label": { "zh": "查看工艺单", "en": "View tech packs" } },
     { "id": "techpack.edit", "label": { "zh": "编辑工艺单", "en": "Edit tech packs" } },
-    { "id": "techpack.submit", "label": { "zh": "提交工艺单审核", "en": "Submit tech packs for review" } }
+    { "id": "techpack.submit", "label": { "zh": "提交工艺单审核", "en": "Submit tech packs for review" } },
+    { "id": "techpack.configure", "label": { "zh": "配置工艺单模板", "en": "Configure tech pack templates" } }
   ],
   "backend": {
     "assembly": "backend/Pei.Plm.TechPack.dll",
@@ -25,7 +26,14 @@
     "entry": "frontend/index.js",
     "styles": ["frontend/index.css"],
     "slots": [
-      { "slot": "nav.page", "export": "TechPackPage", "route": "/techpack", "label": { "zh": "工艺单", "en": "Tech Packs" }, "order": 300, "permission": "techpack.read" }
+      { "slot": "nav.page", "export": "TechPackListPage", "route": "/techpack", "label": { "zh": "工艺单", "en": "Tech Packs" }, "icon": "ruler", "group": "product", "order": 300, "permission": "techpack.read" },
+      { "slot": "route.page", "export": "TechPackDetailPage", "route": "/techpack/:styleNo", "permission": "techpack.read" },
+      { "slot": "home.widget", "export": "PendingReviewWidget", "label": { "zh": "待我审核的工艺单", "en": "Tech packs awaiting my review" }, "size": "m", "order": 40, "permission": "techpack.read" },
+      { "slot": "command", "route": "/techpack/new", "label": { "zh": "新建工艺单", "en": "New tech pack" }, "keywords": ["techpack", "工艺单", "新建"], "permission": "techpack.edit" },
+      { "slot": "search.provider", "endpoint": "GET /search", "label": { "zh": "工艺单", "en": "Tech packs" }, "permission": "techpack.read" },
+      { "slot": "settings.page", "export": "TemplateSettingsPage", "route": "/settings/techpack-templates", "label": { "zh": "工艺单模板", "en": "Tech pack templates" }, "group": "product", "permission": "techpack.configure" },
+      { "slot": "core.masterdata/style.detail.tab@1", "export": "StyleTechPackTab", "label": { "zh": "工艺单", "en": "Tech pack" }, "order": 20, "permission": "techpack.read" },
+      { "slot": "bot.threads/tool.result@1", "export": "TechPackResultCard", "match": { "tool": "plm.techpack/techpack.get" } }
     ]
   },
   "database": {
@@ -45,12 +53,13 @@
       "name": "techpack.submit_for_review",
       "description": { "zh": "把一份草稿工艺单提交给技术部审核。提交后需技术部退回才能再改。", "en": "Submit a draft tech pack to the technical team for review. It cannot be edited again until returned." },
       "risk": "L2",
+      "summary": { "zh": "提交 {styleNo} 的工艺单给技术部审核", "en": "Submit the tech pack for {styleNo} for technical review" },
       "endpoint": "POST /techpacks/{styleNo}/submit",
       "permission": "techpack.submit"
     }
   ],
   "schedules": [
-    { "id": "overdue_reminders", "cron": "0 8 * * 1-5", "timeZone": "Asia/Shanghai", "endpoint": "POST /jobs/overdue-reminders" }
+    { "id": "overdue_reminders", "cron": "0 0 * * 1-5", "endpoint": "POST /jobs/overdue-reminders" }
   ],
   "events": {
     "publishes": ["plm.techpack/submitted.v1"],

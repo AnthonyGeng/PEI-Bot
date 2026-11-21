@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "displayName": { "zh": "线程", "en": "Threads" },
   "owner": "北京开发团队",
-  "sdk": ">=1.0 <2.0",
+  "sdk": "[1.0,2.0)",
   "requiresFeatures": ["bot"],
   "poolHint": "experimental",
   "permissions": [
@@ -18,7 +18,27 @@
   "frontend": {
     "entry": "frontend/index.js",
     "slots": [
-      { "slot": "nav.page", "export": "ThreadsPage", "route": "/threads", "label": { "zh": "线程", "en": "Threads" }, "order": 20, "permission": "thread.use" }
+      { "slot": "nav.page", "export": "ThreadsPage", "route": "/threads", "label": { "zh": "线程", "en": "Threads" }, "icon": "messages", "group": "bot", "order": 20, "permission": "thread.use" },
+      { "slot": "route.page", "export": "ThreadPage", "route": "/threads/:threadId", "permission": "thread.use" },
+      { "slot": "header.action", "export": "AskBotButton", "label": { "zh": "交给 Bot", "en": "Hand off to a bot" }, "icon": "sparkles", "order": 10, "permission": "thread.use" },
+      { "slot": "profile.section", "export": "BotNotificationPrefs", "label": { "zh": "Bot 通知", "en": "Bot notifications" } }
+    ],
+    "extensionPoints": [
+      {
+        "name": "tool.result",
+        "version": 1,
+        "kind": "card",
+        "description": { "zh": "在线程里渲染某个工具的调用结果。未挂载时以通用卡片显示。", "en": "Renders a tool result in a thread. Falls back to a generic card when nothing is mounted." },
+        "props": "frontend/extension-points/tool-result.v1.json",
+        "matchBy": ["tool"]
+      },
+      {
+        "name": "message.action",
+        "version": 1,
+        "kind": "action",
+        "description": { "zh": "Bot 消息上的操作菜单项,例如“在工艺单中打开”。", "en": "Action menu item on a bot message, such as Open in Tech Pack." },
+        "props": "frontend/extension-points/message-action.v1.json"
+      }
     ]
   },
   "database": { "schema": "bot_threads" },
