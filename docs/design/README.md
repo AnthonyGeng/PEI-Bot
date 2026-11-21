@@ -48,7 +48,7 @@
 | 01a | [界面插槽与扩展点](01a-ui-slots.md) | 草案 v0.1 |
 | 02 | [内核契约:`PEI.Platform.Abstractions` 与 `@pei/sdk`](02-kernel-contracts.md) | 草案 v0.1,已编译和类型检查 |
 | 03 | [宿主池、隔离与资源配额](03-host-pools-isolation.md) | 草案 v0.1 |
-| 04 | 身份与权限:用户、委托、功能开关(Bot 身份在第一版之后补充) | 未开始 |
+| 04 | [身份与权限](04-identity-access.md) · [数据表](../../kernel/db/migrations/0001_identity_access.sql) | 草案 v0.1,数据表已在本地 PostgreSQL 验证 |
 | 05 | 数据模型:Bot、线程、运行、审批、审计 | 未开始 |
 | 06 | Bot 运行时:Agent 循环、持久化、调度、互调 | 第一版之后 |
 | 07 | 模型网关与 Decision 1 适配 | 第一版之后 |
