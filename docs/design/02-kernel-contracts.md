@@ -40,7 +40,7 @@ public interface IPlugin
 | `IRequestContext` | 当前主体、租户、语言、时区、关联 ID | 是 |
 | `IPermissionService` | 判断权限点 | 是 |
 | `IFeatureFlags` | 功能开关,如 `bot` | 是 |
-| `IPluginDatabase` | 打开数据库连接:插件专属角色、自己的 schema、连接数上限和语句超时 | 是 |
+| `IPluginDatabase` | 打开数据库连接:以插件自己的运行角色直接登录,只能访问自己的 schema,带连接数上限和语句超时(见 05 号文档第 5 节) | 是 |
 | `IPluginBlobStore` | 文件存储,限定在插件自己的前缀下,一律用流 | 是 |
 | `IPluginCache` | 缓存,键自动加插件前缀,必须设过期时间 | 是 |
 | `IPluginSecrets` | 在 Admin 中为插件配置的密钥,如机房 ERP 连接串 | 是 |

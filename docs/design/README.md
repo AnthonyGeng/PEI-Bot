@@ -37,6 +37,7 @@
 | 第一版身份 | 管理员创建的本地账号;插件只见内部用户 ID,之后迁到 GIP 对插件透明 | 02 号文档 |
 | 数据库 | 云上 Cloud SQL for PostgreSQL;本地开发用自建 PostgreSQL,大版本、扩展、角色模型、时区与云上一致 | 08 号文档 |
 | 数据库迁移 | 由 Admin 在发布时执行一次;宿主只用无 DDL 权限的运行角色 | 03 号文档 |
+| 插件数据库角色 | 每个插件一个迁移角色、一个运行角色,都直接登录,不经内核切换 | 05 号文档 |
 | 时间 | 存储、传输、cron 一律 UTC;界面按用户时区显示;跟随当地钟点的任务可另填时区 | 01 号文档 |
 | 实施顺序 | 第一版只做底座空壳并用示例插件验证;之后迁主数据和 PLM,WebOrder 最后;Bot 作为插件在第一版之后加入 | 本页“第一版范围” |
 
@@ -49,7 +50,7 @@
 | 02 | [内核契约:`PEI.Platform.Abstractions` 与 `@pei/sdk`](02-kernel-contracts.md) | 草案 v0.1,已编译和类型检查 |
 | 03 | [宿主池、隔离与资源配额](03-host-pools-isolation.md) | 草案 v0.1 |
 | 04 | [身份与权限](04-identity-access.md) · [数据表](../../kernel/db/migrations/0001_identity_access.sql) | 草案 v0.1,数据表已在本地 PostgreSQL 验证 |
-| 05 | 数据模型:Bot、线程、运行、审批、审计 | 未开始 |
+| 05 | [插件注册表与发布流程](05-plugin-registry-release.md) · [数据表](../../kernel/db/migrations/0002_plugin_registry.sql) | 草案 v0.1,数据表与数据库角色隔离已在本地 PostgreSQL 验证 |
 | 06 | Bot 运行时:Agent 循环、持久化、调度、互调 | 第一版之后 |
 | 07 | 模型网关与 Decision 1 适配 | 第一版之后 |
 | 08 | [部署拓扑与环境](08-environments.md) | 草案 v0.1,已写数据库与本地开发 |

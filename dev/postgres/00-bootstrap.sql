@@ -1,5 +1,6 @@
 -- 本地开发库初始化。与云上 Cloud SQL 的初始化保持同一套角色模型:
--- 内核用 pei_kernel 角色;每个插件的角色由内核在安装插件时创建,都不是超级用户。
+-- 内核用 pei_kernel 角色;每个插件的两个登录角色由内核在首次发布插件时创建(core.ensure_plugin_roles),都不是超级用户。
+-- 需要 PostgreSQL 16 或更高版本。
 -- 仅用于本地,密码不得用于任何其他环境。
 
 create role pei_kernel login password 'local-dev-only' createrole;
